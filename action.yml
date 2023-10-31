@@ -1,18 +1,20 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'SemVer tags from PR labels'
+description: 'This action creates SemVer tags from PR labels'
+author: 'VSHN AG'
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  patch-label:
+    description: 'Label which indicates a patch-level SemVer bump'
+    required: false
+    default: 'bump:patch'
+  minor-label:
+    description: 'Label which indicates a minor-level SemVer bump'
+    required: false
+    default: 'bump:minor'
+  major-label:
+    description: 'Label which indicates a major-level SemVer bump'
+    required: false
+    default: 'bump:major'
 
 runs:
   using: node20
