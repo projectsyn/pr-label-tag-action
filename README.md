@@ -5,7 +5,7 @@
 
 This action looks for specific labels (by default `bump:major`, `bump:minor`, and
 `bump:patch`) on PRs, and creates a new SemVer tag based on the current latest
-version of the repo after a PR with one of the labels is merged.
+version of the repository after a PR with one of the labels is merged.
 
 The action adds a PR comment which shows what will happen if the PR is merged.
 The comment is updated when labels are added or removed, if the workflow has
