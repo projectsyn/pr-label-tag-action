@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
-import { BumpLabels, bumpFromLabels } from './bump-labels'
-import { inc } from 'semver'
+import { inc, ReleaseType } from 'semver'
 
 export async function latestTag(): Promise<string> {
   let stdout = ''
@@ -25,9 +24,7 @@ export async function latestTag(): Promise<string> {
   })
 }
 
-export async function bumpVersion(b: BumpLabels): Promise<string> {
-  const bump = await bumpFromLabels(b)
-  const currVer = await latestTag()
+export function bumpVersion(currVer: string, bump: ReleaseType): string {
   core.debug(`Current version: ${currVer}`)
 
   const newVer = inc(currVer, bump)
@@ -37,7 +34,5 @@ export async function bumpVersion(b: BumpLabels): Promise<string> {
     )
   }
   // we know newVer is a string here
-  return new Promise(resolve => {
-    resolve(`v${newVer}`)
-  })
+  return `v${newVer}`
 }

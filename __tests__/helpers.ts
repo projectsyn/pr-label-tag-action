@@ -1,4 +1,5 @@
 import * as exec from '@actions/exec'
+import * as github from '@actions/github'
 import { expect } from '@jest/globals'
 
 export function makeGitExecMock(
@@ -71,4 +72,28 @@ export function makeOctokitMock(
       }
     }
   }
+}
+
+export function populateGitHubContext(): void {
+  process.env['GITHUB_REPOSITORY'] = 'projectsyn/pr-label-tag-action'
+  github.context.eventName = 'pull_request'
+  github.context.ref = 'refs/pull/123/merge'
+  github.context.workflow = 'Mock workflow'
+  github.context.action = 'mock-action-1'
+  github.context.actor = 'vshn-renovate'
+  github.context.payload = {
+    action: 'synchronize',
+    number: 123,
+    pull_request: {
+      number: 123,
+      title: 'Mock PR',
+      user: {
+        login: 'vshn-renovate'
+      }
+    }
+  }
+  github.context.issue.owner = 'projectsyn'
+  github.context.issue.repo = 'pr-label-tag-action'
+  github.context.issue.number = 123
+  github.context.sha = ''
 }

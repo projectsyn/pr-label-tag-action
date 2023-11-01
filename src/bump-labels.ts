@@ -43,32 +43,7 @@ async function getPRLabels(): Promise<string[]> {
   })
 }
 
-async function prBumpLabel(b: BumpLabels): Promise<string | null> {
-  const prLabels = await getPRLabels()
-  const bumpLabels = prLabels.filter(
-    (l: string) => l === b.patch || l === b.minor || l === b.major
-  )
-  if (bumpLabels.length === 0) {
-    core.info('No bump labels found')
-    return new Promise(resolve => {
-      resolve(null)
-    })
-  }
-  if (bumpLabels.length > 1) {
-    core.warning(`Multiple bump labels found: ${JSON.stringify(bumpLabels)}`)
-    // TODO: PR comment
-    return new Promise(resolve => {
-      resolve(null)
-    })
-  }
-  // here we know that bumpLabels must have exactly 1 element
-  return new Promise(resolve => {
-    resolve(bumpLabels[0])
-  })
-}
-
-export async function bumpFromLabels(b: BumpLabels): Promise<ReleaseType> {
-  const bump = await prBumpLabel(b)
+function bumpFromLabel(b: BumpLabels, bump: string): ReleaseType {
   switch (bump) {
     case b.patch:
       return 'patch' as ReleaseType
@@ -77,6 +52,38 @@ export async function bumpFromLabels(b: BumpLabels): Promise<ReleaseType> {
     case b.major:
       return 'major' as ReleaseType
     default:
-      throw new Error(`Unknown version bump ${bump}`)
+      throw new Error(`Unknown version bump ${bump}. This shouldn't happen`)
   }
+}
+
+interface BumpAction {
+  bump: ReleaseType | null
+  labels: string[]
+}
+
+export async function prBumpLabel(b: BumpLabels): Promise<BumpAction> {
+  const prLabels = await getPRLabels()
+  const bumpLabels = prLabels.filter(
+    (l: string) => l === b.patch || l === b.minor || l === b.major
+  )
+  if (bumpLabels.length === 0) {
+    core.info('No bump labels found')
+    return new Promise(resolve => {
+      resolve({ bump: null, labels: bumpLabels } as BumpAction)
+    })
+  }
+  if (bumpLabels.length > 1) {
+    core.warning(`Multiple bump labels found: ${JSON.stringify(bumpLabels)}`)
+    // TODO: PR comment
+    return new Promise(resolve => {
+      resolve({ bump: null, labels: bumpLabels } as BumpAction)
+    })
+  }
+  // here we know that bumpLabels must have exactly 1 element
+  return new Promise(resolve => {
+    resolve({
+      bump: bumpFromLabel(b, bumpLabels[0]),
+      labels: bumpLabels
+    } as BumpAction)
+  })
 }

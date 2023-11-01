@@ -12,7 +12,7 @@ import * as github from '@actions/github'
 import * as bump_labels from '../src/bump-labels'
 import { ReleaseType } from 'semver'
 import { expect } from '@jest/globals'
-import { makeOctokitMock } from './helpers'
+import { makeOctokitMock, populateGitHubContext } from './helpers'
 
 // Mock the GitHub Actions core library
 const getInputMock = jest.spyOn(core, 'getInput')
@@ -65,39 +65,11 @@ describe('readBumpLabels', () => {
   })
 })
 
-describe('bumpFromLabels', () => {
+describe('prBumpLabel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     // set context for tests
-    // @ts-ignore
-    github.context = {
-      event_name: 'pull_request',
-      ref: 'refs/pull/123/merge',
-      workflow: 'Mock workflow',
-      action: 'mock-action-1',
-      actor: 'vshn-renovate',
-      repo: {
-        owner: 'projectsyn',
-        repo: 'pr-label-tag-action'
-      },
-      payload: {
-        action: 'synchronize',
-        number: 123,
-        pull_request: {
-          number: 123,
-          title: 'Mock PR',
-          user: {
-            login: 'vshn-renovate'
-          }
-        }
-      },
-      issue: {
-        owner: 'projectsyn',
-        repo: 'pr-label-tag-action',
-        number: 123
-      },
-      sha: ''
-    }
+    populateGitHubContext()
   })
 
   it('raises an error on non-PR events', async () => {
@@ -111,7 +83,7 @@ describe('bumpFromLabels', () => {
     delete github.context.payload.pull_request
 
     await expect(async () => {
-      await bump_labels.bumpFromLabels(bumpLabels)
+      await bump_labels.prBumpLabel(bumpLabels)
     }).rejects.toThrow(
       new Error(
         "Action is running on a 'discussion' event, only 'pull_request' events are supported"
@@ -136,9 +108,10 @@ describe('bumpFromLabels', () => {
     })
     getOctokitMock.mockImplementation(makeOctokitMock('bump:patch'))
 
-    await expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
-      'patch' as ReleaseType
-    )
+    await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
+      bump: 'patch' as ReleaseType,
+      labels: ['bump:patch']
+    })
   })
 
   it('identifies bump:minor label', async () => {
@@ -158,9 +131,10 @@ describe('bumpFromLabels', () => {
     })
     getOctokitMock.mockImplementation(makeOctokitMock('bump:minor'))
 
-    await expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
-      'minor' as ReleaseType
-    )
+    await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
+      bump: 'minor' as ReleaseType,
+      labels: ['bump:minor']
+    })
   })
 
   it('identifies bump:major label', async () => {
@@ -180,9 +154,10 @@ describe('bumpFromLabels', () => {
     })
     getOctokitMock.mockImplementation(makeOctokitMock('bump:major'))
 
-    await expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
-      'major' as ReleaseType
-    )
+    await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
+      bump: 'major' as ReleaseType,
+      labels: ['bump:major']
+    })
   })
 
   it('logs a message when no bump labels are present', async () => {
@@ -202,9 +177,10 @@ describe('bumpFromLabels', () => {
     })
     getOctokitMock.mockImplementation(makeOctokitMock())
 
-    await expect(async () => {
-      await bump_labels.bumpFromLabels(bumpLabels)
-    }).rejects.toThrow(new Error('Unknown version bump null'))
+    await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
+      bump: null,
+      labels: []
+    })
 
     expect(infoMock).toHaveBeenNthCalledWith(1, 'No bump labels found')
   })
@@ -228,9 +204,10 @@ describe('bumpFromLabels', () => {
       makeOctokitMock('bump:patch', 'bump:minor')
     )
 
-    await expect(bump_labels.bumpFromLabels(bumpLabels)).rejects.toThrow(
-      new Error('Unknown version bump null')
-    )
+    await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
+      bump: null,
+      labels: ['bump:patch', 'bump:minor']
+    })
 
     expect(warningMock).toHaveBeenNthCalledWith(
       1,
