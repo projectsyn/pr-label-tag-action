@@ -29923,8 +29923,8 @@ async function getPRLabels() {
 }
 async function prBumpLabel(b) {
     const prLabels = await getPRLabels();
-    const bumpLabels = prLabels.filter((l) => l == b.patch || l == b.minor || l == b.major);
-    if (bumpLabels.length == 0) {
+    const bumpLabels = prLabels.filter((l) => l === b.patch || l === b.minor || l === b.major);
+    if (bumpLabels.length === 0) {
         core.info('No bump labels found');
         return new Promise(resolve => {
             resolve(null);

@@ -12,6 +12,7 @@ import * as github from '@actions/github'
 import * as bump_labels from '../src/bump-labels'
 import { ReleaseType } from 'semver'
 import { expect } from '@jest/globals'
+import { makeOctokitMock } from './helpers'
 
 // Mock the GitHub Actions core library
 const getInputMock = jest.spyOn(core, 'getInput')
@@ -109,7 +110,7 @@ describe('bumpFromLabels', () => {
     github.context.eventName = 'discussion'
     delete github.context.payload.pull_request
 
-    expect(async () => {
+    await expect(async () => {
       await bump_labels.bumpFromLabels(bumpLabels)
     }).rejects.toThrow(
       new Error(
@@ -133,29 +134,9 @@ describe('bumpFromLabels', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation((token: string): any => {
-      expect(token).toBe('mock-token')
-      return {
-        rest: {
-          pulls: {
-            get: async (req: any) => {
-              expect(req.owner).toBe('projectsyn')
-              expect(req.repo).toBe('pr-label-tag-action')
-              expect(req.pull_number).toBe(123)
-              return new Promise(resolve => {
-                resolve({
-                  data: {
-                    labels: [{ name: 'bump:patch' }, { name: 'dependency' }]
-                  }
-                })
-              })
-            }
-          }
-        }
-      }
-    })
+    getOctokitMock.mockImplementation(makeOctokitMock('bump:patch'))
 
-    expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
+    await expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
       'patch' as ReleaseType
     )
   })
@@ -175,29 +156,9 @@ describe('bumpFromLabels', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation((token: string): any => {
-      expect(token).toBe('mock-token')
-      return {
-        rest: {
-          pulls: {
-            get: async (req: any) => {
-              expect(req.owner).toBe('projectsyn')
-              expect(req.repo).toBe('pr-label-tag-action')
-              expect(req.pull_number).toBe(123)
-              return new Promise(resolve => {
-                resolve({
-                  data: {
-                    labels: [{ name: 'bump:minor' }, { name: 'dependency' }]
-                  }
-                })
-              })
-            }
-          }
-        }
-      }
-    })
+    getOctokitMock.mockImplementation(makeOctokitMock('bump:minor'))
 
-    expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
+    await expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
       'minor' as ReleaseType
     )
   })
@@ -217,29 +178,9 @@ describe('bumpFromLabels', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation((token: string): any => {
-      expect(token).toBe('mock-token')
-      return {
-        rest: {
-          pulls: {
-            get: async (req: any) => {
-              expect(req.owner).toBe('projectsyn')
-              expect(req.repo).toBe('pr-label-tag-action')
-              expect(req.pull_number).toBe(123)
-              return new Promise(resolve => {
-                resolve({
-                  data: {
-                    labels: [{ name: 'bump:major' }, { name: 'dependency' }]
-                  }
-                })
-              })
-            }
-          }
-        }
-      }
-    })
+    getOctokitMock.mockImplementation(makeOctokitMock('bump:major'))
 
-    expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
+    await expect(bump_labels.bumpFromLabels(bumpLabels)).resolves.toBe(
       'major' as ReleaseType
     )
   })
@@ -259,27 +200,7 @@ describe('bumpFromLabels', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation((token: string): any => {
-      expect(token).toBe('mock-token')
-      return {
-        rest: {
-          pulls: {
-            get: async (req: any) => {
-              expect(req.owner).toBe('projectsyn')
-              expect(req.repo).toBe('pr-label-tag-action')
-              expect(req.pull_number).toBe(123)
-              return new Promise(resolve => {
-                resolve({
-                  data: {
-                    labels: [{ name: 'dependency' }]
-                  }
-                })
-              })
-            }
-          }
-        }
-      }
-    })
+    getOctokitMock.mockImplementation(makeOctokitMock())
 
     await expect(async () => {
       await bump_labels.bumpFromLabels(bumpLabels)
@@ -303,31 +224,9 @@ describe('bumpFromLabels', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation((token: string): any => {
-      expect(token).toBe('mock-token')
-      return {
-        rest: {
-          pulls: {
-            get: async (req: any) => {
-              expect(req.owner).toBe('projectsyn')
-              expect(req.repo).toBe('pr-label-tag-action')
-              expect(req.pull_number).toBe(123)
-              return new Promise(resolve => {
-                resolve({
-                  data: {
-                    labels: [
-                      { name: 'dependency' },
-                      { name: 'bump:patch' },
-                      { name: 'bump:minor' }
-                    ]
-                  }
-                })
-              })
-            }
-          }
-        }
-      }
-    })
+    getOctokitMock.mockImplementation(
+      makeOctokitMock('bump:patch', 'bump:minor')
+    )
 
     await expect(bump_labels.bumpFromLabels(bumpLabels)).rejects.toThrow(
       new Error('Unknown version bump null')
