@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import { latestTag } from './version'
 
 /**
  * The main function for the action.
@@ -18,6 +19,9 @@ export async function run(): Promise<void> {
     core.debug(
       `Using ${patchLabel}, ${minorLabel}, ${majorLabel} to determine SemVer bump ...`
     )
+
+    const currVer = await latestTag()
+    core.debug(`Current version: ${currVer}`)
 
     // TODO logic
   } catch (error) {
