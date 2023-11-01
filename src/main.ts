@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { latestTag } from './version'
+import { readBumpLabels } from './bump-labels'
 
 /**
  * The main function for the action.
@@ -7,21 +7,12 @@ import { latestTag } from './version'
  */
 export async function run(): Promise<void> {
   try {
-    const patchLabel: string = core.getInput('patch-label')
-    const minorLabel: string = core.getInput('minor-label')
-    const majorLabel: string = core.getInput('major-label')
-
-    if (patchLabel === '' || minorLabel === '' || majorLabel === '') {
-      throw Error("Empty bump labels aren't supported")
-    }
+    const bumpLabels = readBumpLabels()
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
     core.debug(
-      `Using ${patchLabel}, ${minorLabel}, ${majorLabel} to determine SemVer bump ...`
+      `Using ${bumpLabels.patch}, ${bumpLabels.minor}, ${bumpLabels.major} to determine SemVer bump ...`
     )
-
-    const currVer = await latestTag()
-    core.debug(`Current version: ${currVer}`)
 
     // TODO logic
   } catch (error) {
