@@ -30,7 +30,7 @@ export async function createOrUpdateComment(body: string): Promise<void> {
       comment.user &&
       comment.user.login === 'github-actions[bot]' &&
       comment.body &&
-      comment.body.includes('🛠️ _Auto release ')
+      comment.body.includes('🛠️ _Auto tagging ')
   )
 
   if (comments.length > 0) {

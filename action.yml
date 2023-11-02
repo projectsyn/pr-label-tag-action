@@ -19,8 +19,20 @@ inputs:
     description: 'Token to access GitHub (e.g. `$secrets.GITHUB_TOKEN`)'
     required: true
   trigger:
-    description: 'Workflow names of workflows that should be triggered when a new tag is created'
+    description: 'Workflow names of workflows that should be triggered when a new tag is created. Multiple workflows can be specified on separate lines.'
     required: false
+  release-comment:
+    description: 'Comment that gets posted when a tag will be pushed on merge'
+    required: false
+    default: '🚀 Merging this PR will release `<next-version>`'
+  released-comment:
+    description: 'Comment that gets posted when a tag has been pushed'
+    required: false
+    default: '🚀 This PR has been released as [`<next-version>`](<repo-url>)'
+  unmerged-comment:
+    description: 'Comment that gets posted when a labeled PR gets closed unmerged'
+    required: false
+    default: 'This PR has been closed unmerged. No new release will be created for these changes'
 
 runs:
   using: node20

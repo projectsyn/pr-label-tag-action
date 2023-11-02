@@ -34507,7 +34507,7 @@ async function createOrUpdateComment(body) {
     const comments = allComments.filter((comment) => comment.user &&
         comment.user.login === 'github-actions[bot]' &&
         comment.body &&
-        comment.body.includes('🛠️ _Auto release '));
+        comment.body.includes('🛠️ _Auto tagging '));
     if (comments.length > 0) {
         if (comments.length > 1) {
             core.warning('Multiple potential comments owned by this action found, editing oldest');
@@ -34574,6 +34574,18 @@ const comment_1 = __nccwpck_require__(7810);
 function formatCode(text) {
     return `\`${text}\``;
 }
+function readCommentInputs() {
+    return {
+        releaseComment: core.getInput('release-comment'),
+        releasedComment: core.getInput('released-comment'),
+        unmergedComment: core.getInput('unmerged-comment')
+    };
+}
+function formatComment(comment, nextVer, repoURL) {
+    return comment
+        .replaceAll('<next-version>', nextVer)
+        .replaceAll('<repo-url>', repoURL);
+}
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -34585,6 +34597,7 @@ async function run() {
             return;
         }
         const bumpLabels = (0, bump_labels_1.readBumpLabels)();
+        const comments = readCommentInputs();
         // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
         core.debug(`Using ${bumpLabels.patch}, ${bumpLabels.minor}, ${bumpLabels.major} to determine SemVer bump ...`);
         // check if we need to do something
@@ -34594,7 +34607,7 @@ async function run() {
             if (bumpAction.labels.length > 1) {
                 const labels = bumpAction.labels.map(formatCode).join(', ');
                 await (0, comment_1.createOrUpdateComment)(`Found ${bumpAction.labels.length} bump labels (${labels}), ` +
-                    'please make sure you only add one bump label.\n\n🛠️ _Auto release disabled_');
+                    'please make sure you only add one bump label.\n\n🛠️ _Auto tagging disabled_');
             }
             return;
         }
@@ -34602,6 +34615,12 @@ async function run() {
         const currVer = await (0, version_1.latestTag)();
         const nextVer = (0, version_1.bumpVersion)(currVer, bumpAction.bump);
         core.debug(`Bumping ${currVer} to ${nextVer}`);
+        const repoURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
+            `/${github.context.repo.repo}/releases/tag/${nextVer}`;
+        const triggers = core
+            .getMultilineInput('trigger')
+            .map(formatCode)
+            .join(', ');
         const ghAction = github.context.payload.action;
         const ghMerged = github.context.payload.pull_request['merged'];
         if (ghAction === 'closed' && ghMerged === true) {
@@ -34611,18 +34630,20 @@ async function run() {
             // `trigger`
             await (0, version_1.triggerDispatch)(nextVer);
             // update comment
-            const repoURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
-                `/${github.context.repo.repo}/releases/tag/${nextVer}`;
-            await (0, comment_1.createOrUpdateComment)(`🚀 This PR has been released as [${formatCode(nextVer)}](${repoURL})\n\n` +
-                `🛠️ _Auto release enabled_ with label ${formatCode(label)}`);
+            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releasedComment, nextVer, repoURL)}\n\n` +
+                `${triggers.length > 0 ? `Triggering workflows ${triggers}\n\n` : ''}` +
+                `🛠️ _Auto tagging enabled_ with label ${formatCode(label)}`);
         }
         else if (ghAction === 'closed') {
-            await (0, comment_1.createOrUpdateComment)('🚀 This PR has been closed unmerged. No new release will be created for these changes\n\n' +
-                '🛠️ _Auto release disabled_');
+            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.unmergedComment, nextVer, repoURL)}\n\n` +
+                '🛠️ _Auto tagging disabled_');
         }
         else {
-            await (0, comment_1.createOrUpdateComment)(`🚀 Merging this PR will release ${formatCode(nextVer)}\n\n` +
-                `🛠️ _Auto release enabled_ with label ${formatCode(label)}`);
+            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releaseComment, nextVer, repoURL)}\n\n` +
+                `${triggers.length > 0
+                    ? `Merging will trigger workflows ${triggers}\n\n`
+                    : ''}` +
+                `🛠️ _Auto tagging enabled_ with label ${formatCode(label)}`);
         }
     }
     catch (error) {

@@ -21,6 +21,7 @@ import {
 // Mock the GitHub Actions core library
 const debugMock = jest.spyOn(core, 'debug')
 const getInputMock = jest.spyOn(core, 'getInput')
+const getMultilineInputMock = jest.spyOn(core, 'getMultilineInput')
 const setFailedMock = jest.spyOn(core, 'setFailed')
 const execMock = jest.spyOn(exec, 'exec')
 const getOctokitMock = jest.spyOn(github, 'getOctokit')
@@ -63,13 +64,6 @@ describe('action', () => {
         })
       }
     )
-    // Mock github.getOctokit to return fake api responses for fetching PR
-    // labels
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
-    populateGitHubContext()
-  })
-
-  it('creates or updates comment on labeled PR', async () => {
     // Set the action's inputs as return values from core.getInput()
     getInputMock.mockImplementation((name: string): string => {
       switch (name) {
@@ -81,11 +75,23 @@ describe('action', () => {
           return 'bump:major'
         case 'github-token':
           return 'mock-token'
+        case 'release-comment':
+          return '🚀 Merging this PR will release `<next-version>`'
+        case 'released-comment':
+          return '🚀 This PR has been released as [`<next-version>`](<repo-url>)'
+        case 'unmerged-comment':
+          return 'This PR has been closed unmerged. No new release will be created for these changes'
         default:
           return ''
       }
     })
+    // Mock github.getOctokit to return fake api responses for fetching PR
+    // labels
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
+    populateGitHubContext()
+  })
 
+  it('creates or updates comment on labeled PR', async () => {
     await main.run()
     expect(runMock).toHaveReturned()
 
@@ -97,28 +103,13 @@ describe('action', () => {
     expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
       1,
       '🚀 Merging this PR will release `v1.2.4`\n\n' +
-        '🛠️ _Auto release enabled_ with label `bump:patch`'
+        '🛠️ _Auto tagging enabled_ with label `bump:patch`'
     )
     expect(createAndPushTagMock).not.toHaveBeenCalled()
     expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on PR with multiple bump labels', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'patch-label':
-          return 'bump:patch'
-        case 'minor-label':
-          return 'bump:minor'
-        case 'major-label':
-          return 'bump:major'
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(
       makePROctokitMock('bump:patch', 'bump:minor')
     )
@@ -134,28 +125,13 @@ describe('action', () => {
     expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
       1,
       'Found 2 bump labels (`bump:patch`, `bump:minor`), please make sure you only add one bump label.\n\n' +
-        '🛠️ _Auto release disabled_'
+        '🛠️ _Auto tagging disabled_'
     )
     expect(createAndPushTagMock).not.toHaveBeenCalled()
     expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on closed unmerged PR', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'patch-label':
-          return 'bump:patch'
-        case 'minor-label':
-          return 'bump:minor'
-        case 'major-label':
-          return 'bump:major'
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
@@ -173,29 +149,14 @@ describe('action', () => {
     )
     expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
       1,
-      '🚀 This PR has been closed unmerged. No new release will be created for these changes\n\n' +
-        '🛠️ _Auto release disabled_'
+      'This PR has been closed unmerged. No new release will be created for these changes\n\n' +
+        '🛠️ _Auto tagging disabled_'
     )
     expect(createAndPushTagMock).not.toHaveBeenCalled()
     expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on merged PR', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'patch-label':
-          return 'bump:patch'
-        case 'minor-label':
-          return 'bump:minor'
-        case 'major-label':
-          return 'bump:major'
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
@@ -214,7 +175,7 @@ describe('action', () => {
     expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
       1,
       '🚀 This PR has been released as [`v1.2.4`](https://github.com/projectsyn/pr-label-tag-action/releases/tag/v1.2.4)\n\n' +
-        '🛠️ _Auto release enabled_ with label `bump:patch`'
+        '🛠️ _Auto tagging enabled_ with label `bump:patch`'
     )
     expect(createAndPushTagMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
     expect(triggerDispatchMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
@@ -253,5 +214,68 @@ describe('action', () => {
       1,
       "Action is running for a 'discussion' event. Only 'pull_request' events are supported"
     )
+  })
+
+  it('lists triggered workflows in comment', async () => {
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
+    github.context.payload.action = 'closed'
+    expect(github.context.payload.pull_request).toBeDefined()
+    if (github.context.payload.pull_request) {
+      github.context.payload.pull_request['merged'] = true
+    }
+    getMultilineInputMock.mockImplementation((name: string): string[] => {
+      switch (name) {
+        case 'trigger':
+          return ['Foo', 'bar']
+        default:
+          return []
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    // Verify that all of the core library functions were called correctly
+    expect(debugMock).toHaveBeenNthCalledWith(
+      1,
+      'Using bump:patch, bump:minor, bump:major to determine SemVer bump ...'
+    )
+    expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
+      1,
+      '🚀 This PR has been released as [`v1.2.4`](https://github.com/projectsyn/pr-label-tag-action/releases/tag/v1.2.4)\n\n' +
+        'Triggering workflows `Foo`, `bar`\n\n' +
+        '🛠️ _Auto tagging enabled_ with label `bump:patch`'
+    )
+    expect(createAndPushTagMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
+    expect(triggerDispatchMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
+  })
+
+  it('lists workflows to trigger in comment', async () => {
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
+    getMultilineInputMock.mockImplementation((name: string): string[] => {
+      switch (name) {
+        case 'trigger':
+          return ['Foo', 'bar']
+        default:
+          return []
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    // Verify that all of the core library functions were called correctly
+    expect(debugMock).toHaveBeenNthCalledWith(
+      1,
+      'Using bump:patch, bump:minor, bump:major to determine SemVer bump ...'
+    )
+    expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
+      1,
+      '🚀 Merging this PR will release `v1.2.4`\n\n' +
+        'Merging will trigger workflows `Foo`, `bar`\n\n' +
+        '🛠️ _Auto tagging enabled_ with label `bump:patch`'
+    )
+    expect(createAndPushTagMock).not.toHaveBeenCalled()
+    expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 })

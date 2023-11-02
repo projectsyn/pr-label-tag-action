@@ -9,7 +9,7 @@ const warnMock = jest.spyOn(core, 'warning')
 
 const commentText =
   '🚀 Merging this PR will release `v1.2.4`\n\n' +
-  '🛠️ _Auto release enabled_ with label `bump:patch`'
+  '🛠️ _Auto tagging enabled_ with label `bump:patch`'
 
 function makeCommentOctokitMock(
   ...cfg: { comment: string; author: string }[]
@@ -119,7 +119,7 @@ describe('createOrUpdateComment', () => {
 
   it('updates the comment, if a matching one exists already', async () => {
     const clientMock = makeCommentOctokitMock({
-      comment: '🛠️ _Auto release disabled_',
+      comment: '🛠️ _Auto tagging disabled_',
       author: 'github-actions[bot]'
     })
     getOctokitMock.mockImplementation(clientMock.mockFn)
@@ -131,7 +131,7 @@ describe('createOrUpdateComment', () => {
   })
   it('creates a new comment, when other comments matching the pattern but with a different author exist', async () => {
     const clientMock = makeCommentOctokitMock({
-      comment: '🛠️ _Auto release disabled_',
+      comment: '🛠️ _Auto tagging disabled_',
       author: 'octocat'
     })
     getOctokitMock.mockImplementation(clientMock.mockFn)
@@ -158,11 +158,11 @@ describe('createOrUpdateComment', () => {
   it('edits the oldest comment, and logs a warning if multiple comments match', async () => {
     const clientMock = makeCommentOctokitMock(
       {
-        comment: '🛠️ _Auto release disabled_',
+        comment: '🛠️ _Auto tagging disabled_',
         author: 'github-actions[bot]'
       },
       {
-        comment: '🛠️ _Auto release enabled_',
+        comment: '🛠️ _Auto tagging enabled_',
         author: 'github-actions[bot]'
       }
     )

@@ -13,6 +13,30 @@ function formatCode(text: string): string {
   return `\`${text}\``
 }
 
+interface ReleaseComments {
+  releaseComment: string
+  releasedComment: string
+  unmergedComment: string
+}
+
+function readCommentInputs(): ReleaseComments {
+  return {
+    releaseComment: core.getInput('release-comment'),
+    releasedComment: core.getInput('released-comment'),
+    unmergedComment: core.getInput('unmerged-comment')
+  } as ReleaseComments
+}
+
+function formatComment(
+  comment: string,
+  nextVer: string,
+  repoURL: string
+): string {
+  return comment
+    .replaceAll('<next-version>', nextVer)
+    .replaceAll('<repo-url>', repoURL)
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -27,6 +51,7 @@ export async function run(): Promise<void> {
     }
 
     const bumpLabels = readBumpLabels()
+    const comments = readCommentInputs()
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
     core.debug(
@@ -42,7 +67,7 @@ export async function run(): Promise<void> {
         const labels = bumpAction.labels.map(formatCode).join(', ')
         await createOrUpdateComment(
           `Found ${bumpAction.labels.length} bump labels (${labels}), ` +
-            'please make sure you only add one bump label.\n\n🛠️ _Auto release disabled_'
+            'please make sure you only add one bump label.\n\n🛠️ _Auto tagging disabled_'
         )
       }
       return
@@ -53,6 +78,15 @@ export async function run(): Promise<void> {
     const nextVer = bumpVersion(currVer, bumpAction.bump)
     core.debug(`Bumping ${currVer} to ${nextVer}`)
 
+    const repoURL =
+      `${github.context.serverUrl}/${github.context.repo.owner}` +
+      `/${github.context.repo.repo}/releases/tag/${nextVer}`
+
+    const triggers = core
+      .getMultilineInput('trigger')
+      .map(formatCode)
+      .join(', ')
+
     const ghAction = github.context.payload.action
     const ghMerged = github.context.payload.pull_request['merged']
     if (ghAction === 'closed' && ghMerged === true) {
@@ -62,24 +96,27 @@ export async function run(): Promise<void> {
       // `trigger`
       await triggerDispatch(nextVer)
       // update comment
-      const repoURL =
-        `${github.context.serverUrl}/${github.context.repo.owner}` +
-        `/${github.context.repo.repo}/releases/tag/${nextVer}`
       await createOrUpdateComment(
-        `🚀 This PR has been released as [${formatCode(
-          nextVer
-        )}](${repoURL})\n\n` +
-          `🛠️ _Auto release enabled_ with label ${formatCode(label)}`
+        `${formatComment(comments.releasedComment, nextVer, repoURL)}\n\n` +
+          `${
+            triggers.length > 0 ? `Triggering workflows ${triggers}\n\n` : ''
+          }` +
+          `🛠️ _Auto tagging enabled_ with label ${formatCode(label)}`
       )
     } else if (ghAction === 'closed') {
       await createOrUpdateComment(
-        '🚀 This PR has been closed unmerged. No new release will be created for these changes\n\n' +
-          '🛠️ _Auto release disabled_'
+        `${formatComment(comments.unmergedComment, nextVer, repoURL)}\n\n` +
+          '🛠️ _Auto tagging disabled_'
       )
     } else {
       await createOrUpdateComment(
-        `🚀 Merging this PR will release ${formatCode(nextVer)}\n\n` +
-          `🛠️ _Auto release enabled_ with label ${formatCode(label)}`
+        `${formatComment(comments.releaseComment, nextVer, repoURL)}\n\n` +
+          `${
+            triggers.length > 0
+              ? `Merging will trigger workflows ${triggers}\n\n`
+              : ''
+          }` +
+          `🛠️ _Auto tagging enabled_ with label ${formatCode(label)}`
       )
     }
   } catch (error) {
