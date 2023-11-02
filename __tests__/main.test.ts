@@ -26,6 +26,7 @@ const execMock = jest.spyOn(exec, 'exec')
 const getOctokitMock = jest.spyOn(github, 'getOctokit')
 const createOrUpdateCommentMock = jest.spyOn(comment, 'createOrUpdateComment')
 const createAndPushTagMock = jest.spyOn(version, 'createAndPushTag')
+const triggerDispatchMock = jest.spyOn(version, 'triggerDispatch')
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -46,6 +47,15 @@ describe('action', () => {
     )
     // mock our own createAndPushTag to do nothing
     createAndPushTagMock.mockImplementation(
+      async (tag: string): Promise<void> => {
+        return new Promise(resolve => {
+          tag
+          resolve()
+        })
+      }
+    )
+    // mock our own triggerDispatch to do nothing
+    triggerDispatchMock.mockImplementation(
       async (tag: string): Promise<void> => {
         return new Promise(resolve => {
           tag
@@ -90,6 +100,7 @@ describe('action', () => {
         '🛠️ _Auto release enabled_ with label `bump:patch`'
     )
     expect(createAndPushTagMock).not.toHaveBeenCalled()
+    expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on PR with multiple bump labels', async () => {
@@ -126,6 +137,7 @@ describe('action', () => {
         '🛠️ _Auto release disabled_'
     )
     expect(createAndPushTagMock).not.toHaveBeenCalled()
+    expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on closed unmerged PR', async () => {
@@ -165,6 +177,7 @@ describe('action', () => {
         '🛠️ _Auto release disabled_'
     )
     expect(createAndPushTagMock).not.toHaveBeenCalled()
+    expect(triggerDispatchMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on merged PR', async () => {
@@ -204,6 +217,7 @@ describe('action', () => {
         '🛠️ _Auto release enabled_ with label `bump:patch`'
     )
     expect(createAndPushTagMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
+    expect(triggerDispatchMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
   })
 
   it('raises an error on an empty input', async () => {

@@ -34607,7 +34607,9 @@ async function run() {
         if (ghAction === 'closed' && ghMerged === true) {
             // create and push tag
             await (0, version_1.createAndPushTag)(nextVer);
-            // TODO: trigger follow-up actions
+            // trigger follow-up actions, follow-up actions are given in input
+            // `trigger`
+            await (0, version_1.triggerDispatch)(nextVer);
             // update comment
             const repoURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
                 `/${github.context.repo.repo}/releases/tag/${nextVer}`;
@@ -34663,9 +34665,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
+exports.triggerDispatch = exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
+const github = __importStar(__nccwpck_require__(5438));
 const semver_1 = __nccwpck_require__(1383);
 async function execCaptured(command, args) {
     let stdout = '';
@@ -34719,6 +34722,37 @@ async function createAndPushTag(tag) {
     });
 }
 exports.createAndPushTag = createAndPushTag;
+async function triggerDispatch(tag) {
+    const token = core.getInput('github-token');
+    const client = github.getOctokit(token);
+    const names = core.getMultilineInput('trigger');
+    const { data: workflows } = await client.rest.actions.listRepoWorkflows({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo
+    });
+    for (const name of names) {
+        core.debug(`Triggering workflow ${name}`);
+        const wfs = workflows.workflows.filter(wf => wf.name === name);
+        if (wfs.length > 1) {
+            core.debug(`Multiple workflows with name ${name}, triggering all of them`);
+        }
+        if (wfs.length === 0) {
+            core.warning(`No workflow with name ${name} found, skipping`);
+        }
+        for (const wf of wfs) {
+            await client.rest.actions.createWorkflowDispatch({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                workflow_id: wf.id,
+                ref: `refs/tags/${tag}`
+            });
+        }
+    }
+    return new Promise(resolve => {
+        resolve();
+    });
+}
+exports.triggerDispatch = triggerDispatch;
 
 
 /***/ }),

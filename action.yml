@@ -18,6 +18,9 @@ inputs:
   github-token:
     description: 'Token to access GitHub (e.g. `$secrets.GITHUB_TOKEN`)'
     required: true
+  trigger:
+    description: 'Workflow names of workflows that should be triggered when a new tag is created'
+    required: false
 
 runs:
   using: node20
