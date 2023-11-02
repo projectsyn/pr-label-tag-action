@@ -11,6 +11,7 @@ import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import * as main from '../src/main'
 import * as comment from '../src/comment'
+import * as version from '../src/version'
 import {
   makeGitExecMock,
   makePROctokitMock,
@@ -24,6 +25,7 @@ const setFailedMock = jest.spyOn(core, 'setFailed')
 const execMock = jest.spyOn(exec, 'exec')
 const getOctokitMock = jest.spyOn(github, 'getOctokit')
 const createOrUpdateCommentMock = jest.spyOn(comment, 'createOrUpdateComment')
+const createAndPushTagMock = jest.spyOn(version, 'createAndPushTag')
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -38,6 +40,15 @@ describe('action', () => {
       async (body: string): Promise<void> => {
         return new Promise(resolve => {
           body
+          resolve()
+        })
+      }
+    )
+    // mock our own createAndPushTag to do nothing
+    createAndPushTagMock.mockImplementation(
+      async (tag: string): Promise<void> => {
+        return new Promise(resolve => {
+          tag
           resolve()
         })
       }
@@ -78,6 +89,7 @@ describe('action', () => {
       '🚀 Merging this PR will release `v1.2.4`\n\n' +
         '🛠️ _Auto release enabled_ with label `bump:patch`'
     )
+    expect(createAndPushTagMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on PR with multiple bump labels', async () => {
@@ -113,6 +125,7 @@ describe('action', () => {
       'Found 2 bump labels (`bump:patch`, `bump:minor`), please make sure you only add one bump label.\n\n' +
         '🛠️ _Auto release disabled_'
     )
+    expect(createAndPushTagMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on closed unmerged PR', async () => {
@@ -151,6 +164,7 @@ describe('action', () => {
       '🚀 This PR has been closed unmerged. No new release will be created for these changes\n\n' +
         '🛠️ _Auto release disabled_'
     )
+    expect(createAndPushTagMock).not.toHaveBeenCalled()
   })
 
   it('creates or updates comment on merged PR', async () => {
@@ -189,6 +203,7 @@ describe('action', () => {
       '🚀 This PR has been released as [`v1.2.4`](https://github.com/projectsyn/pr-label-tag-action/releases/tag/v1.2.4)\n\n' +
         '🛠️ _Auto release enabled_ with label `bump:patch`'
     )
+    expect(createAndPushTagMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
   })
 
   it('raises an error on an empty input', async () => {

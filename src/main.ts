@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { readBumpLabels, prBumpLabel } from './bump-labels'
-import { bumpVersion, latestTag } from './version'
+import { bumpVersion, latestTag, createAndPushTag } from './version'
 import { createOrUpdateComment } from './comment'
 
 function formatCode(text: string): string {
@@ -51,7 +51,8 @@ export async function run(): Promise<void> {
     const ghAction = github.context.payload.action
     const ghMerged = github.context.payload.pull_request['merged']
     if (ghAction === 'closed' && ghMerged === true) {
-      // TODO: create tag
+      // create and push tag
+      await createAndPushTag(nextVer)
       // TODO: trigger follow-up actions
       // update comment
       const repoURL =

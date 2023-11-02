@@ -34605,7 +34605,8 @@ async function run() {
         const ghAction = github.context.payload.action;
         const ghMerged = github.context.payload.pull_request['merged'];
         if (ghAction === 'closed' && ghMerged === true) {
-            // TODO: create tag
+            // create and push tag
+            await (0, version_1.createAndPushTag)(nextVer);
             // TODO: trigger follow-up actions
             // update comment
             const repoURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
@@ -34662,11 +34663,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.bumpVersion = exports.latestTag = void 0;
+exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const semver_1 = __nccwpck_require__(1383);
-async function latestTag() {
+async function execCaptured(command, args) {
     let stdout = '';
     let stderr = '';
     const options = {};
@@ -34678,11 +34679,17 @@ async function latestTag() {
             stderr += data.toString();
         }
     };
-    const retval = await exec.exec('git', ['tag', '--sort=-v:refname'], options);
-    if (retval !== 0) {
-        throw Error(`Call to git failed:\n${stdout}\n${stderr}`);
+    const retval = await exec.exec(command, args, options);
+    return new Promise(resolve => {
+        resolve({ stdout, stderr, retval });
+    });
+}
+async function latestTag() {
+    const result = await execCaptured('git', ['tag', '--sort=-v:refname']);
+    if (result.retval !== 0) {
+        throw Error(`Call to git failed:\n${result.stdout}\n${result.stderr}`);
     }
-    const latest = stdout === '' ? 'v0.0.0' : stdout.split('\n')[0];
+    const latest = result.stdout === '' ? 'v0.0.0' : result.stdout.split('\n')[0];
     return new Promise(resolve => {
         resolve(latest);
     });
@@ -34698,6 +34705,20 @@ function bumpVersion(currVer, bump) {
     return `v${newVer}`;
 }
 exports.bumpVersion = bumpVersion;
+async function createAndPushTag(tag) {
+    const tagres = await execCaptured('git', ['tag', tag]);
+    if (tagres.retval !== 0) {
+        throw Error(`Creating tag failed:\n${tagres.stdout}\n${tagres.stderr}`);
+    }
+    const pushres = await execCaptured('git', ['push', 'origin', tag]);
+    if (pushres.retval !== 0) {
+        throw Error(`Pushing tag failed:\n${pushres.stdout}\n${pushres.stderr}`);
+    }
+    return new Promise(resolve => {
+        resolve();
+    });
+}
+exports.createAndPushTag = createAndPushTag;
 
 
 /***/ }),

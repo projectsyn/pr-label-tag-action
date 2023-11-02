@@ -107,3 +107,105 @@ describe('bumpVersion', () => {
     )
   })
 })
+
+describe('createAndPushTag', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('creates and pushes tag', async () => {
+    execMock.mockImplementation(
+      async (
+        command: string,
+        args?: string[],
+        options?: exec.ExecOptions
+      ): Promise<number> => {
+        expect(command).toBe('git')
+        expect(args).toBeDefined()
+        expect(options).toBeDefined()
+        return new Promise(resolve => {
+          resolve(0)
+        })
+      }
+    )
+
+    await version.createAndPushTag('v1.2.4')
+    expect(execMock).toHaveBeenCalledTimes(2)
+    expect(execMock.mock.calls[0][0]).toBe('git')
+    expect(execMock.mock.calls[0][1]).toStrictEqual(['tag', 'v1.2.4'])
+    expect(execMock.mock.calls[1][0]).toBe('git')
+    expect(execMock.mock.calls[1][1]).toStrictEqual([
+      'push',
+      'origin',
+      'v1.2.4'
+    ])
+  })
+
+  it("throws an error if tag can't be created", async () => {
+    execMock.mockImplementation(
+      async (
+        command: string,
+        args?: string[],
+        options?: exec.ExecOptions
+      ): Promise<number> => {
+        expect(command).toBe('git')
+        expect(args).toBeDefined()
+        expect(options).toBeDefined()
+        return new Promise(resolve => {
+          if (args && args[0] === 'tag') {
+            if (options && options.listeners && options.listeners.stdout) {
+              options.listeners.stdout(Buffer.from('dummy error'))
+            }
+            resolve(1)
+          } else {
+            resolve(0)
+          }
+        })
+      }
+    )
+
+    await expect(async () => {
+      await version.createAndPushTag('v1.2.4')
+    }).rejects.toThrow(new Error('Creating tag failed:\ndummy error\n'))
+    expect(execMock).toHaveBeenCalledTimes(1)
+    expect(execMock.mock.calls[0][0]).toBe('git')
+    expect(execMock.mock.calls[0][1]).toStrictEqual(['tag', 'v1.2.4'])
+  })
+
+  it("throws an error if tag can't be pushed", async () => {
+    execMock.mockImplementation(
+      async (
+        command: string,
+        args?: string[],
+        options?: exec.ExecOptions
+      ): Promise<number> => {
+        expect(command).toBe('git')
+        expect(args).toBeDefined()
+        expect(options).toBeDefined()
+        return new Promise(resolve => {
+          if (args && args[0] === 'push') {
+            if (options && options.listeners && options.listeners.stdout) {
+              options.listeners.stdout(Buffer.from('dummy error'))
+            }
+            resolve(1)
+          } else {
+            resolve(0)
+          }
+        })
+      }
+    )
+
+    await expect(async () => {
+      await version.createAndPushTag('v1.2.4')
+    }).rejects.toThrow(new Error('Pushing tag failed:\ndummy error\n'))
+    expect(execMock).toHaveBeenCalledTimes(2)
+    expect(execMock.mock.calls[0][0]).toBe('git')
+    expect(execMock.mock.calls[0][1]).toStrictEqual(['tag', 'v1.2.4'])
+    expect(execMock.mock.calls[0][0]).toBe('git')
+    expect(execMock.mock.calls[1][1]).toStrictEqual([
+      'push',
+      'origin',
+      'v1.2.4'
+    ])
+  })
+})
