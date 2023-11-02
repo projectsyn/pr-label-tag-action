@@ -34384,7 +34384,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.prBumpLabel = exports.readBumpLabels = void 0;
+exports.prBumpLabel = exports.bumpFromLabel = exports.readBumpLabels = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function readBumpLabels() {
@@ -34430,6 +34430,7 @@ function bumpFromLabel(b, bump) {
             throw new Error(`Unknown version bump ${bump}. This shouldn't happen`);
     }
 }
+exports.bumpFromLabel = bumpFromLabel;
 async function prBumpLabel(b) {
     const prLabels = await getPRLabels();
     const bumpLabels = prLabels.filter((l) => l === b.patch || l === b.minor || l === b.major);

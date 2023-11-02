@@ -43,7 +43,7 @@ async function getPRLabels(): Promise<string[]> {
   })
 }
 
-function bumpFromLabel(b: BumpLabels, bump: string): ReleaseType {
+export function bumpFromLabel(b: BumpLabels, bump: string): ReleaseType {
   switch (bump) {
     case b.patch:
       return 'patch' as ReleaseType

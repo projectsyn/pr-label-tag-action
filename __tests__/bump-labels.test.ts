@@ -154,3 +154,15 @@ describe('prBumpLabel', () => {
     )
   })
 })
+
+describe('bumpFromLabel', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('raises an error on an unknown bump label value', () => {
+    expect(() => {
+      bump_labels.bumpFromLabel(bumpLabels, 'foo')
+    }).toThrow(new Error("Unknown version bump foo. This shouldn't happen"))
+  })
+})
