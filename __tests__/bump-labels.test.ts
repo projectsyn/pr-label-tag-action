@@ -20,6 +20,12 @@ const infoMock = jest.spyOn(core, 'info')
 const warningMock = jest.spyOn(core, 'warning')
 const getOctokitMock = jest.spyOn(github, 'getOctokit')
 
+const bumpLabels = {
+  patch: 'bump:patch',
+  minor: 'bump:minor',
+  major: 'bump:major'
+} as bump_labels.BumpLabels
+
 describe('readBumpLabels', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -39,8 +45,8 @@ describe('readBumpLabels', () => {
       }
     })
 
-    const bumpLabels = bump_labels.readBumpLabels()
-    expect(bumpLabels).toStrictEqual({
+    const labels = bump_labels.readBumpLabels()
+    expect(labels).toStrictEqual({
       patch: 'patch',
       minor: 'bump:minor',
       major: 'bump:major'
@@ -70,15 +76,18 @@ describe('prBumpLabel', () => {
     jest.clearAllMocks()
     // set context for tests
     populateGitHubContext()
+    // set input mock
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'github-token':
+          return 'mock-token'
+        default:
+          return ''
+      }
+    })
   })
 
   it('raises an error on non-PR events', async () => {
-    const bumpLabels = {
-      patch: 'bump:patch',
-      minor: 'bump:minor',
-      major: 'bump:major'
-    } as bump_labels.BumpLabels
-
     github.context.eventName = 'discussion'
     delete github.context.payload.pull_request
 
@@ -92,20 +101,6 @@ describe('prBumpLabel', () => {
   })
 
   it('identifies bump:patch label', async () => {
-    const bumpLabels = {
-      patch: 'bump:patch',
-      minor: 'bump:minor',
-      major: 'bump:major'
-    } as bump_labels.BumpLabels
-
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
@@ -115,20 +110,6 @@ describe('prBumpLabel', () => {
   })
 
   it('identifies bump:minor label', async () => {
-    const bumpLabels = {
-      patch: 'bump:patch',
-      minor: 'bump:minor',
-      major: 'bump:major'
-    } as bump_labels.BumpLabels
-
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(makePROctokitMock('bump:minor'))
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
@@ -138,20 +119,6 @@ describe('prBumpLabel', () => {
   })
 
   it('identifies bump:major label', async () => {
-    const bumpLabels = {
-      patch: 'bump:patch',
-      minor: 'bump:minor',
-      major: 'bump:major'
-    } as bump_labels.BumpLabels
-
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(makePROctokitMock('bump:major'))
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
@@ -161,20 +128,6 @@ describe('prBumpLabel', () => {
   })
 
   it('logs a message when no bump labels are present', async () => {
-    const bumpLabels = {
-      patch: 'bump:patch',
-      minor: 'bump:minor',
-      major: 'bump:major'
-    } as bump_labels.BumpLabels
-
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(makePROctokitMock())
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
@@ -186,20 +139,6 @@ describe('prBumpLabel', () => {
   })
 
   it('logs a warning when multiple bump labels are present', async () => {
-    const bumpLabels = {
-      patch: 'bump:patch',
-      minor: 'bump:minor',
-      major: 'bump:major'
-    } as bump_labels.BumpLabels
-
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'github-token':
-          return 'mock-token'
-        default:
-          return ''
-      }
-    })
     getOctokitMock.mockImplementation(
       makePROctokitMock('bump:patch', 'bump:minor')
     )
