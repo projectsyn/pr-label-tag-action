@@ -34740,6 +34740,10 @@ async function triggerDispatch(tag) {
             core.warning(`No workflow with name ${name} found, skipping`);
         }
         for (const wf of wfs) {
+            core.info(`Triggering workflow ${name} (${wf.id}). ` +
+                "If the workflow doesn't run, please make sure that it's configured with the `workflow_dispatch` event");
+            // only returns 204 according to the docs -- we'd have to query the
+            // actual target workflow to check if a run has been triggered.
             await client.rest.actions.createWorkflowDispatch({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
