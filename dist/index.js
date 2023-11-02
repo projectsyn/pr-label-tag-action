@@ -34570,6 +34570,9 @@ const github = __importStar(__nccwpck_require__(5438));
 const bump_labels_1 = __nccwpck_require__(2605);
 const version_1 = __nccwpck_require__(1946);
 const comment_1 = __nccwpck_require__(7810);
+function formatCode(text) {
+    return `\`${text}\``;
+}
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -34605,26 +34608,16 @@ async function run() {
             // update comment
             const repoURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
                 `/${github.context.repo.repo}/releases/tag/${nextVer}`;
-            await (0, comment_1.createOrUpdateComment)('🚀 This PR has been released as [`' +
-                `${nextVer}` +
-                '`](' +
-                `${repoURL}` +
-                ')\n\n' +
-                '🛠️ _Auto release enabled_ with label `' +
-                `${label}` +
-                '`');
+            await (0, comment_1.createOrUpdateComment)(`🚀 This PR has been released as [${formatCode(nextVer)}](${repoURL})\n\n` +
+                `🛠️ _Auto release enabled_ with label ${formatCode(label)}`);
         }
         else if (ghAction === 'closed') {
             await (0, comment_1.createOrUpdateComment)('🚀 This PR has been closed unmerged. No new release will be created for these changes\n\n' +
                 '🛠️ _Auto release disabled_');
         }
         else {
-            await (0, comment_1.createOrUpdateComment)('🚀 Merging this PR will release `' +
-                `${nextVer}` +
-                '`\n\n' +
-                '🛠️ _Auto release enabled_ with label `' +
-                `${label}` +
-                '`');
+            await (0, comment_1.createOrUpdateComment)(`🚀 Merging this PR will release ${formatCode(nextVer)}\n\n` +
+                `🛠️ _Auto release enabled_ with label ${formatCode(label)}`);
         }
     }
     catch (error) {

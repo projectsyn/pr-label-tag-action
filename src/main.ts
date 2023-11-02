@@ -4,6 +4,10 @@ import { readBumpLabels, prBumpLabel } from './bump-labels'
 import { bumpVersion, latestTag } from './version'
 import { createOrUpdateComment } from './comment'
 
+function formatCode(text: string): string {
+  return `\`${text}\``
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -53,14 +57,10 @@ export async function run(): Promise<void> {
         `${github.context.serverUrl}/${github.context.repo.owner}` +
         `/${github.context.repo.repo}/releases/tag/${nextVer}`
       await createOrUpdateComment(
-        '🚀 This PR has been released as [`' +
-          `${nextVer}` +
-          '`](' +
-          `${repoURL}` +
-          ')\n\n' +
-          '🛠️ _Auto release enabled_ with label `' +
-          `${label}` +
-          '`'
+        `🚀 This PR has been released as [${formatCode(
+          nextVer
+        )}](${repoURL})\n\n` +
+          `🛠️ _Auto release enabled_ with label ${formatCode(label)}`
       )
     } else if (ghAction === 'closed') {
       await createOrUpdateComment(
@@ -69,12 +69,8 @@ export async function run(): Promise<void> {
       )
     } else {
       await createOrUpdateComment(
-        '🚀 Merging this PR will release `' +
-          `${nextVer}` +
-          '`\n\n' +
-          '🛠️ _Auto release enabled_ with label `' +
-          `${label}` +
-          '`'
+        `🚀 Merging this PR will release ${formatCode(nextVer)}\n\n` +
+          `🛠️ _Auto release enabled_ with label ${formatCode(label)}`
       )
     }
   } catch (error) {
