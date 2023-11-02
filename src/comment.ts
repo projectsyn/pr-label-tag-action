@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-interface GHComment {
+export interface GHComment {
   id: number
   body?: string
   user: {

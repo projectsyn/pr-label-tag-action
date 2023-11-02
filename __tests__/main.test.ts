@@ -13,7 +13,7 @@ import * as main from '../src/main'
 import * as comment from '../src/comment'
 import {
   makeGitExecMock,
-  makeOctokitMock,
+  makePROctokitMock,
   populateGitHubContext
 } from './helpers'
 
@@ -44,7 +44,7 @@ describe('action', () => {
     )
     // Mock github.getOctokit to return fake api responses for fetching PR
     // labels
-    getOctokitMock.mockImplementation(makeOctokitMock('bump:patch'))
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     populateGitHubContext()
   })
 
@@ -97,7 +97,7 @@ describe('action', () => {
       }
     })
     getOctokitMock.mockImplementation(
-      makeOctokitMock('bump:patch', 'bump:minor')
+      makePROctokitMock('bump:patch', 'bump:minor')
     )
 
     await main.run()
@@ -131,7 +131,7 @@ describe('action', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation(makeOctokitMock('bump:patch'))
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
     if (github.context.payload.pull_request) {
@@ -169,7 +169,7 @@ describe('action', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation(makeOctokitMock('bump:patch'))
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
     if (github.context.payload.pull_request) {

@@ -12,7 +12,7 @@ import * as github from '@actions/github'
 import * as bump_labels from '../src/bump-labels'
 import { ReleaseType } from 'semver'
 import { expect } from '@jest/globals'
-import { makeOctokitMock, populateGitHubContext } from './helpers'
+import { makePROctokitMock, populateGitHubContext } from './helpers'
 
 // Mock the GitHub Actions core library
 const getInputMock = jest.spyOn(core, 'getInput')
@@ -106,7 +106,7 @@ describe('prBumpLabel', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation(makeOctokitMock('bump:patch'))
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: 'patch' as ReleaseType,
@@ -129,7 +129,7 @@ describe('prBumpLabel', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation(makeOctokitMock('bump:minor'))
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:minor'))
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: 'minor' as ReleaseType,
@@ -152,7 +152,7 @@ describe('prBumpLabel', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation(makeOctokitMock('bump:major'))
+    getOctokitMock.mockImplementation(makePROctokitMock('bump:major'))
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: 'major' as ReleaseType,
@@ -175,7 +175,7 @@ describe('prBumpLabel', () => {
           return ''
       }
     })
-    getOctokitMock.mockImplementation(makeOctokitMock())
+    getOctokitMock.mockImplementation(makePROctokitMock())
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: null,
@@ -201,7 +201,7 @@ describe('prBumpLabel', () => {
       }
     })
     getOctokitMock.mockImplementation(
-      makeOctokitMock('bump:patch', 'bump:minor')
+      makePROctokitMock('bump:patch', 'bump:minor')
     )
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({

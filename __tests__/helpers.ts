@@ -40,7 +40,7 @@ export function makeGitExecMock(
   }
 }
 
-export function makeOctokitMock(
+export function makePROctokitMock(
   ...bumpLabel: string[]
 ): (token: string) => any {
   const labels = [{ name: 'dependency' }]
