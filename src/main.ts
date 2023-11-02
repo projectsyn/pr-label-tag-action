@@ -34,8 +34,9 @@ export async function run(): Promise<void> {
     if (!bumpAction.bump) {
       // update comment if multiple labels found
       if (bumpAction.labels.length > 1) {
+        const labels = bumpAction.labels.map(formatCode).join(', ')
         await createOrUpdateComment(
-          `Found ${bumpAction.labels.length} bump labels, ` +
+          `Found ${bumpAction.labels.length} bump labels (${labels}), ` +
             'please make sure you only add one bump label.\n\n🛠️ _Auto release disabled_'
         )
       }

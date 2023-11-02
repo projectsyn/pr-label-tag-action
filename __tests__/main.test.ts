@@ -110,7 +110,7 @@ describe('action', () => {
     )
     expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
       1,
-      'Found 2 bump labels, please make sure you only add one bump label.\n\n' +
+      'Found 2 bump labels (`bump:patch`, `bump:minor`), please make sure you only add one bump label.\n\n' +
         '🛠️ _Auto release disabled_'
     )
   })
