@@ -10,7 +10,12 @@ export async function latestTag(): Promise<string> {
     client.rest.repos.listTags,
     github.context.repo
   )
-  const tags = tagsResp.map(({ name }) => name).sort(rcompare)
+  const tags = tagsResp
+    .map(({ name }) => name)
+    .filter(tag => {
+      return tag.startsWith('v')
+    })
+    .sort(rcompare)
 
   const latest = tags.length === 0 ? 'v0.0.0' : tags[0]
   return new Promise(resolve => {

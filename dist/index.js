@@ -33520,7 +33520,12 @@ async function latestTag() {
     const token = core.getInput('github-token');
     const client = github.getOctokit(token);
     const tagsResp = await client.paginate(client.rest.repos.listTags, github.context.repo);
-    const tags = tagsResp.map(({ name }) => name).sort(semver_1.rcompare);
+    const tags = tagsResp
+        .map(({ name }) => name)
+        .filter(tag => {
+        return tag.startsWith('v');
+    })
+        .sort(semver_1.rcompare);
     const latest = tags.length === 0 ? 'v0.0.0' : tags[0];
     return new Promise(resolve => {
         resolve(latest);

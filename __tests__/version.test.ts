@@ -46,6 +46,24 @@ describe('latestTag', () => {
     await expect(version.latestTag()).resolves.toBe('v1.2.3')
   })
 
+  it('ignores non-semver tags', async () => {
+    const clientMock = makeTagsOctokitMock(
+      'v1.1.0',
+      'v1.2.3',
+      'v1.1.1',
+      'v1.2.0',
+      'v1.2.1',
+      'v1.0.0',
+      'v1.2.2',
+      'foo-v1.0.0',
+      'bar'
+    )
+    getOctokitMock.mockImplementation(clientMock.mockFn)
+
+    // latest tag should be v1.2.3
+    await expect(version.latestTag()).resolves.toBe('v1.2.3')
+  })
+
   it('returns v0.0.0 for no tags', async () => {
     const clientMock = makeTagsOctokitMock()
     getOctokitMock.mockImplementation(clientMock.mockFn)
