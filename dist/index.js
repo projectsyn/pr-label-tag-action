@@ -33407,10 +33407,10 @@ function readCommentInputs() {
         unmergedComment: core.getInput('unmerged-comment')
     };
 }
-function formatComment(comment, nextVer, repoURL) {
+function formatComment(comment, nextVer, releaseURL) {
     return comment
         .replaceAll('<next-version>', nextVer)
-        .replaceAll('<repo-url>', repoURL);
+        .replaceAll('<release-url>', releaseURL);
 }
 /**
  * The main function for the action.
@@ -33441,7 +33441,7 @@ async function run() {
         const currVer = await (0, version_1.latestTag)();
         const nextVer = (0, version_1.bumpVersion)(currVer, bumpAction.bump);
         core.debug(`Bumping ${currVer} to ${nextVer}`);
-        const repoURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
+        const releaseURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
             `/${github.context.repo.repo}/releases/tag/${nextVer}`;
         const triggers = core
             .getMultilineInput('trigger')
@@ -33456,16 +33456,16 @@ async function run() {
             // `trigger`
             await (0, dispatch_1.triggerDispatch)(nextVer);
             // update comment
-            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releasedComment, nextVer, repoURL)}\n\n` +
+            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releasedComment, nextVer, releaseURL)}\n\n` +
                 `${triggers.length > 0 ? `Triggering workflows ${triggers}\n\n` : ''}` +
                 `🛠️ _Auto tagging enabled_ with label ${formatCode(label)}`);
         }
         else if (ghAction === 'closed') {
-            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.unmergedComment, nextVer, repoURL)}\n\n` +
+            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.unmergedComment, nextVer, releaseURL)}\n\n` +
                 '🛠️ _Auto tagging disabled_');
         }
         else {
-            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releaseComment, nextVer, repoURL)}\n\n` +
+            await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releaseComment, nextVer, releaseURL)}\n\n` +
                 `${triggers.length > 0
                     ? `Merging will trigger workflows ${triggers}\n\n`
                     : ''}` +

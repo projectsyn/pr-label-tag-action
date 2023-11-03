@@ -29,7 +29,7 @@ inputs:
   released-comment:
     description: 'Comment that gets posted when a tag has been pushed'
     required: false
-    default: '🚀 This PR has been released as [`<next-version>`](<repo-url>)'
+    default: '🚀 This PR has been released as [`<next-version>`](<release-url>)'
   unmerged-comment:
     description: 'Comment that gets posted when a labeled PR gets closed unmerged'
     required: false

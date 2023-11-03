@@ -26,11 +26,11 @@ function readCommentInputs(): ReleaseComments {
 function formatComment(
   comment: string,
   nextVer: string,
-  repoURL: string
+  releaseURL: string
 ): string {
   return comment
     .replaceAll('<next-version>', nextVer)
-    .replaceAll('<repo-url>', repoURL)
+    .replaceAll('<release-url>', releaseURL)
 }
 
 /**
@@ -74,7 +74,7 @@ export async function run(): Promise<void> {
     const nextVer = bumpVersion(currVer, bumpAction.bump)
     core.debug(`Bumping ${currVer} to ${nextVer}`)
 
-    const repoURL =
+    const releaseURL =
       `${github.context.serverUrl}/${github.context.repo.owner}` +
       `/${github.context.repo.repo}/releases/tag/${nextVer}`
 
@@ -93,7 +93,7 @@ export async function run(): Promise<void> {
       await triggerDispatch(nextVer)
       // update comment
       await createOrUpdateComment(
-        `${formatComment(comments.releasedComment, nextVer, repoURL)}\n\n` +
+        `${formatComment(comments.releasedComment, nextVer, releaseURL)}\n\n` +
           `${
             triggers.length > 0 ? `Triggering workflows ${triggers}\n\n` : ''
           }` +
@@ -101,12 +101,12 @@ export async function run(): Promise<void> {
       )
     } else if (ghAction === 'closed') {
       await createOrUpdateComment(
-        `${formatComment(comments.unmergedComment, nextVer, repoURL)}\n\n` +
+        `${formatComment(comments.unmergedComment, nextVer, releaseURL)}\n\n` +
           '🛠️ _Auto tagging disabled_'
       )
     } else {
       await createOrUpdateComment(
-        `${formatComment(comments.releaseComment, nextVer, repoURL)}\n\n` +
+        `${formatComment(comments.releaseComment, nextVer, releaseURL)}\n\n` +
           `${
             triggers.length > 0
               ? `Merging will trigger workflows ${triggers}\n\n`

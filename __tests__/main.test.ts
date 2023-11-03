@@ -79,7 +79,7 @@ describe('action', () => {
         case 'release-comment':
           return '🚀 Merging this PR will release `<next-version>`'
         case 'released-comment':
-          return '🚀 This PR has been released as [`<next-version>`](<repo-url>)'
+          return '🚀 This PR has been released as [`<next-version>`](<release-url>)'
         case 'unmerged-comment':
           return 'This PR has been closed unmerged. No new release will be created for these changes'
         default:
