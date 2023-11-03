@@ -7,27 +7,24 @@
  */
 
 import * as core from '@actions/core'
-import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import * as main from '../src/main'
 import * as comment from '../src/comment'
 import * as dispatch from '../src/dispatch'
 import * as version from '../src/version'
-import {
-  makeGitExecMock,
-  ghContextSetPRLabels,
-  populateGitHubContext
-} from './helpers'
+
+import { ghContextSetPRLabels, populateGitHubContext } from './helpers'
 
 // Mock the GitHub Actions core library
 const debugMock = jest.spyOn(core, 'debug')
 const getInputMock = jest.spyOn(core, 'getInput')
 const getMultilineInputMock = jest.spyOn(core, 'getMultilineInput')
 const setFailedMock = jest.spyOn(core, 'setFailed')
-const execMock = jest.spyOn(exec, 'exec')
+
 const createOrUpdateCommentMock = jest.spyOn(comment, 'createOrUpdateComment')
-const createAndPushTagMock = jest.spyOn(version, 'createAndPushTag')
 const triggerDispatchMock = jest.spyOn(dispatch, 'triggerDispatch')
+const createAndPushTagMock = jest.spyOn(version, 'createAndPushTag')
+const latestTagMock = jest.spyOn(version, 'latestTag')
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -35,8 +32,12 @@ const runMock = jest.spyOn(main, 'run')
 describe('action', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Mock `git tag --sort=-v:refname`
-    execMock.mockImplementation(makeGitExecMock('v1.2.3\n'))
+    // Mock latestTag
+    latestTagMock.mockImplementation(async (): Promise<string> => {
+      return new Promise(resolve => {
+        resolve('v1.2.3')
+      })
+    })
     // mock our own createOrUpdateComment to do nothing
     createOrUpdateCommentMock.mockImplementation(
       async (body: string): Promise<void> => {

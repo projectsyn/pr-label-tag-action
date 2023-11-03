@@ -6,64 +6,51 @@
  * variables following the pattern `INPUT_<INPUT_NAME>`.
  */
 
+import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as github from '@actions/github'
 import * as version from '../src/version'
-import { makeGitExecMock, populateGitHubContext } from './helpers'
+
+import { makeTagsOctokitMock, populateGitHubContext } from './helpers'
 
 // Mock the GitHub Actions core library
 const execMock = jest.spyOn(exec, 'exec')
+const inputMock = jest.spyOn(core, 'getInput')
+const getOctokitMock = jest.spyOn(github, 'getOctokit')
 
 describe('latestTag', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    populateGitHubContext()
+    inputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'github-token':
+          return 'mock-token'
+        default:
+          return ''
+      }
+    })
   })
 
   it('parses the latest version', async () => {
-    // Mock `git tag --sort=-v:refname`
-    execMock.mockImplementation(
-      makeGitExecMock('v1.2.3\nv1.2.2\nv1.2.1\nv1.2.0\nv1.1.0\nv1.0.0')
+    const clientMock = makeTagsOctokitMock(
+      'v1.1.0',
+      'v1.2.3',
+      'v1.1.1',
+      'v1.2.0',
+      'v1.2.1',
+      'v1.0.0',
+      'v1.2.2'
     )
+    getOctokitMock.mockImplementation(clientMock.mockFn)
 
     // latest tag should be v1.2.3
     await expect(version.latestTag()).resolves.toBe('v1.2.3')
   })
 
-  it('raises an error on git exec errors', async () => {
-    // Mock `git tag --sort=-v:refname`
-    execMock.mockImplementation(async (commandLine, args?, options?) => {
-      expect(commandLine).toBe('git')
-      expect(args).toStrictEqual(['tag', '--sort=-v:refname'])
-      expect(options).toBeDefined()
-      expect(options).not.toBeNull()
-      if (options) {
-        expect(options.listeners).toBeDefined()
-        expect(options.listeners).not.toBeNull()
-        if (options.listeners) {
-          expect(options.listeners.stdout).toBeDefined()
-          expect(options.listeners.stdout).not.toBeNull()
-          expect(options.listeners.stderr).toBeDefined()
-          expect(options.listeners.stderr).not.toBeNull()
-          if (options.listeners.stdout) {
-            options.listeners.stdout(Buffer.from(''))
-          }
-          if (options.listeners.stderr) {
-            options.listeners.stderr(Buffer.from('dummy error'))
-          }
-        }
-      }
-      return new Promise(resolve => {
-        resolve(1)
-      })
-    })
-
-    await expect(version.latestTag).rejects.toThrow(
-      new Error('Call to git failed:\n\ndummy error')
-    )
-  })
-
   it('returns v0.0.0 for no tags', async () => {
-    // Mock `git tag --sort=-v:refname`
-    execMock.mockImplementation(makeGitExecMock(''))
+    const clientMock = makeTagsOctokitMock()
+    getOctokitMock.mockImplementation(clientMock.mockFn)
 
     await expect(version.latestTag()).resolves.toBe('v0.0.0')
   })

@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
-import { inc, ReleaseType } from 'semver'
+import * as github from '@actions/github'
+import { inc, rcompare, ReleaseType } from 'semver'
 
 async function execCaptured(
   command: string,
@@ -24,11 +25,16 @@ async function execCaptured(
 }
 
 export async function latestTag(): Promise<string> {
-  const result = await execCaptured('git', ['tag', '--sort=-v:refname'])
-  if (result.retval !== 0) {
-    throw Error(`Call to git failed:\n${result.stdout}\n${result.stderr}`)
-  }
-  const latest = result.stdout === '' ? 'v0.0.0' : result.stdout.split('\n')[0]
+  const token = core.getInput('github-token')
+  const client = github.getOctokit(token)
+
+  const tagsResp = await client.paginate(
+    client.rest.repos.listTags,
+    github.context.repo
+  )
+  const tags = tagsResp.map(({ name }) => name).sort(rcompare)
+
+  const latest = tags.length === 0 ? 'v0.0.0' : tags[0]
   return new Promise(resolve => {
     resolve(latest)
   })

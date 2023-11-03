@@ -34746,6 +34746,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
+const github = __importStar(__nccwpck_require__(5438));
 const semver_1 = __nccwpck_require__(1383);
 async function execCaptured(command, args) {
     let stdout = '';
@@ -34765,11 +34766,11 @@ async function execCaptured(command, args) {
     });
 }
 async function latestTag() {
-    const result = await execCaptured('git', ['tag', '--sort=-v:refname']);
-    if (result.retval !== 0) {
-        throw Error(`Call to git failed:\n${result.stdout}\n${result.stderr}`);
-    }
-    const latest = result.stdout === '' ? 'v0.0.0' : result.stdout.split('\n')[0];
+    const token = core.getInput('github-token');
+    const client = github.getOctokit(token);
+    const tagsResp = await client.paginate(client.rest.repos.listTags, github.context.repo);
+    const tags = tagsResp.map(({ name }) => name).sort(semver_1.rcompare);
+    const latest = tags.length === 0 ? 'v0.0.0' : tags[0];
     return new Promise(resolve => {
         resolve(latest);
     });

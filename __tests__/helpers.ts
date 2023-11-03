@@ -73,3 +73,37 @@ export function ghContextSetPRLabels(...labels: string[]): void {
     throw Error('Failed to set PR labels, expect test to fail')
   }
 }
+
+export function makeTagsOctokitMock(...tags: string[]): {
+  mockFn: jest.Mock
+} {
+  return {
+    mockFn: jest.fn((token: string) => {
+      expect(token).toBe('mock-token')
+      return {
+        paginate: (
+          func: (args: Record<string, any>) => any,
+          args: Record<string, any>
+        ) => func(args),
+        rest: {
+          repos: {
+            listTags: async (args: {
+              owner: string
+              repo: string
+            }): Promise<{ name: string }[]> => {
+              expect(args.owner).toBe('projectsyn')
+              expect(args.repo).toBe('pr-label-tag-action')
+              return new Promise(resolve => {
+                resolve(
+                  tags.map(t => {
+                    return { name: t }
+                  })
+                )
+              })
+            }
+          }
+        }
+      }
+    })
+  }
+}
