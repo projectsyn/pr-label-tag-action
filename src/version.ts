@@ -1,28 +1,6 @@
 import * as core from '@actions/core'
-import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import { inc, rcompare, ReleaseType } from 'semver'
-
-async function execCaptured(
-  command: string,
-  args: string[]
-): Promise<{ stdout: string; stderr: string; retval: number }> {
-  let stdout = ''
-  let stderr = ''
-  const options: exec.ExecOptions = {}
-  options.listeners = {
-    stdout: (data: Buffer) => {
-      stdout += data.toString()
-    },
-    stderr: (data: Buffer) => {
-      stderr += data.toString()
-    }
-  }
-  const retval = await exec.exec(command, args, options)
-  return new Promise(resolve => {
-    resolve({ stdout, stderr, retval })
-  })
-}
 
 export async function latestTag(): Promise<string> {
   const token = core.getInput('github-token')
@@ -54,17 +32,26 @@ export function bumpVersion(currVer: string, bump: ReleaseType): string {
 }
 
 export async function createAndPushTag(tag: string): Promise<void> {
-  const tagres = await execCaptured('git', ['tag', tag])
-  if (tagres.retval !== 0) {
-    throw Error(`Creating tag failed:\n${tagres.stdout}\n${tagres.stderr}`)
+  if (!github.context.payload.pull_request) {
+    throw Error(
+      `Action is running for a '${github.context.eventName}' event. ` +
+        "Only 'pull_request' events are supported"
+    )
   }
-
-  const pushres = await execCaptured('git', ['push', 'origin', tag])
-  if (pushres.retval !== 0) {
-    throw Error(`Pushing tag failed:\n${pushres.stdout}\n${pushres.stderr}`)
+  if (
+    !github.context.payload.pull_request.merged ||
+    !github.context.payload.pull_request.merge_commit_sha
+  ) {
+    throw Error("Creating tag for unmerged PRs isn't supported")
   }
+  const token = core.getInput('github-token')
+  const client = github.getOctokit(token)
 
-  return new Promise(resolve => {
-    resolve()
+  // create tag
+  await client.rest.git.createRef({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    ref: `refs/tags/${tag}`,
+    sha: github.context.payload.pull_request.merge_commit_sha
   })
 }

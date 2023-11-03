@@ -1,44 +1,5 @@
-import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import { expect } from '@jest/globals'
-
-export function makeGitExecMock(
-  stdout: string
-): (
-  commandLine: string,
-  args?: string[] | undefined,
-  options?: exec.ExecOptions | undefined
-) => Promise<number> {
-  return async (
-    commandLine: string,
-    args?: string[] | undefined,
-    options?: exec.ExecOptions | undefined
-  ): Promise<number> => {
-    expect(commandLine).toBe('git')
-    expect(args).toStrictEqual(['tag', '--sort=-v:refname'])
-    expect(options).toBeDefined()
-    expect(options).not.toBeNull()
-    if (options) {
-      expect(options.listeners).toBeDefined()
-      expect(options.listeners).not.toBeNull()
-      if (options.listeners) {
-        expect(options.listeners.stdout).toBeDefined()
-        expect(options.listeners.stdout).not.toBeNull()
-        expect(options.listeners.stderr).toBeDefined()
-        expect(options.listeners.stderr).not.toBeNull()
-        if (options.listeners.stdout) {
-          options.listeners.stdout(Buffer.from(stdout))
-        }
-        if (options.listeners.stderr) {
-          options.listeners.stderr(Buffer.from(''))
-        }
-      }
-    }
-    return new Promise(resolve => {
-      resolve(0)
-    })
-  }
-}
 
 export function populateGitHubContext(): void {
   process.env['GITHUB_REPOSITORY'] = 'projectsyn/pr-label-tag-action'

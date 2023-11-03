@@ -7,14 +7,12 @@
  */
 
 import * as core from '@actions/core'
-import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import * as version from '../src/version'
 
 import { makeTagsOctokitMock, populateGitHubContext } from './helpers'
 
 // Mock the GitHub Actions core library
-const execMock = jest.spyOn(exec, 'exec')
 const inputMock = jest.spyOn(core, 'getInput')
 const getOctokitMock = jest.spyOn(github, 'getOctokit')
 
@@ -95,104 +93,110 @@ describe('bumpVersion', () => {
   })
 })
 
+function makeCreateRefOctokitMock(): {
+  mockFn: jest.Mock
+  createRefFn: jest.Mock
+} {
+  const createRefFn = jest.fn(
+    async (args: {
+      owner: string
+      repo: string
+      ref: string
+      sha: string
+    }): Promise<void> => {
+      expect(args.owner).toBe('projectsyn')
+      expect(args.repo).toBe('pr-label-tag-action')
+      return new Promise(resolve => {
+        resolve()
+      })
+    }
+  )
+  return {
+    createRefFn,
+    mockFn: jest.fn((token: string): any => {
+      expect(token).toBe('mock-token')
+      return {
+        rest: {
+          git: {
+            createRef: createRefFn
+          }
+        }
+      }
+    })
+  }
+}
+
 describe('createAndPushTag', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    populateGitHubContext()
+    inputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'github-token':
+          return 'mock-token'
+        default:
+          return ''
+      }
+    })
   })
 
   it('creates and pushes tag', async () => {
-    execMock.mockImplementation(
-      async (
-        command: string,
-        args?: string[],
-        options?: exec.ExecOptions
-      ): Promise<number> => {
-        expect(command).toBe('git')
-        expect(args).toBeDefined()
-        expect(options).toBeDefined()
-        return new Promise(resolve => {
-          resolve(0)
-        })
-      }
-    )
+    const clientMock = makeCreateRefOctokitMock()
+    getOctokitMock.mockImplementation(clientMock.mockFn)
+    // echo -n mock | sha1sum
+    const mockSHA = '475e81e79c7880f9b5caa35bec50279c459ad2f9'
+    if (github.context.payload.pull_request) {
+      github.context.payload.pull_request.merged = true
+      github.context.payload.pull_request.merge_commit_sha = mockSHA
+    } else {
+      throw Error('PR context not set, test probably fails')
+    }
 
     await version.createAndPushTag('v1.2.4')
-    expect(execMock).toHaveBeenCalledTimes(2)
-    expect(execMock.mock.calls[0][0]).toBe('git')
-    expect(execMock.mock.calls[0][1]).toStrictEqual(['tag', 'v1.2.4'])
-    expect(execMock.mock.calls[1][0]).toBe('git')
-    expect(execMock.mock.calls[1][1]).toStrictEqual([
-      'push',
-      'origin',
-      'v1.2.4'
-    ])
+    expect(clientMock.createRefFn).toHaveBeenCalledTimes(1)
+    expect(clientMock.createRefFn).toHaveBeenNthCalledWith(1, {
+      owner: 'projectsyn',
+      repo: 'pr-label-tag-action',
+      ref: 'refs/tags/v1.2.4',
+      sha: mockSHA
+    })
   })
 
-  it("throws an error if tag can't be created", async () => {
-    execMock.mockImplementation(
-      async (
-        command: string,
-        args?: string[],
-        options?: exec.ExecOptions
-      ): Promise<number> => {
-        expect(command).toBe('git')
-        expect(args).toBeDefined()
-        expect(options).toBeDefined()
-        return new Promise(resolve => {
-          if (args && args[0] === 'tag') {
-            if (options && options.listeners && options.listeners.stdout) {
-              options.listeners.stdout(Buffer.from('dummy error'))
-            }
-            resolve(1)
-          } else {
-            resolve(0)
-          }
-        })
-      }
-    )
-
+  it('throws an error running on a non-PR event', async () => {
+    github.context.eventName = 'discussion'
+    delete github.context.payload.pull_request
     await expect(async () => {
       await version.createAndPushTag('v1.2.4')
-    }).rejects.toThrow(new Error('Creating tag failed:\ndummy error\n'))
-    expect(execMock).toHaveBeenCalledTimes(1)
-    expect(execMock.mock.calls[0][0]).toBe('git')
-    expect(execMock.mock.calls[0][1]).toStrictEqual(['tag', 'v1.2.4'])
+    }).rejects.toThrow(
+      new Error(
+        "Action is running for a 'discussion' event. Only 'pull_request' events are supported"
+      )
+    )
   })
 
-  it("throws an error if tag can't be pushed", async () => {
-    execMock.mockImplementation(
-      async (
-        command: string,
-        args?: string[],
-        options?: exec.ExecOptions
-      ): Promise<number> => {
-        expect(command).toBe('git')
-        expect(args).toBeDefined()
-        expect(options).toBeDefined()
-        return new Promise(resolve => {
-          if (args && args[0] === 'push') {
-            if (options && options.listeners && options.listeners.stdout) {
-              options.listeners.stdout(Buffer.from('dummy error'))
-            }
-            resolve(1)
-          } else {
-            resolve(0)
-          }
-        })
-      }
-    )
-
+  it('throws an error running on an unmerged PR', async () => {
+    // echo -n mock | sha1sum
+    const mockSHA = '475e81e79c7880f9b5caa35bec50279c459ad2f9'
+    if (github.context.payload.pull_request) {
+      github.context.payload.pull_request.merged = false
+      github.context.payload.pull_request.merge_commit_sha = mockSHA
+    }
     await expect(async () => {
       await version.createAndPushTag('v1.2.4')
-    }).rejects.toThrow(new Error('Pushing tag failed:\ndummy error\n'))
-    expect(execMock).toHaveBeenCalledTimes(2)
-    expect(execMock.mock.calls[0][0]).toBe('git')
-    expect(execMock.mock.calls[0][1]).toStrictEqual(['tag', 'v1.2.4'])
-    expect(execMock.mock.calls[0][0]).toBe('git')
-    expect(execMock.mock.calls[1][1]).toStrictEqual([
-      'push',
-      'origin',
-      'v1.2.4'
-    ])
+    }).rejects.toThrow(
+      new Error("Creating tag for unmerged PRs isn't supported")
+    )
+  })
+
+  it('throws an error if no merge_commit_sha is present in the context', async () => {
+    // echo -n mock | sha1sum
+    if (github.context.payload.pull_request) {
+      github.context.payload.pull_request.merged = true
+    }
+    await expect(async () => {
+      await version.createAndPushTag('v1.2.4')
+    }).rejects.toThrow(
+      new Error("Creating tag for unmerged PRs isn't supported")
+    )
   })
 })
