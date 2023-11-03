@@ -18,6 +18,7 @@ inputs:
   github-token:
     description: 'Token to access GitHub (e.g. `$secrets.GITHUB_TOKEN`)'
     required: true
+    default: ${{ github.token }}
   trigger:
     description: 'Workflow names of workflows that should be triggered when a new tag is created. Multiple workflows can be specified on separate lines.'
     required: false
