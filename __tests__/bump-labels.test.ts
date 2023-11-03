@@ -12,13 +12,12 @@ import * as github from '@actions/github'
 import * as bump_labels from '../src/bump-labels'
 import { ReleaseType } from 'semver'
 import { expect } from '@jest/globals'
-import { makePROctokitMock, populateGitHubContext } from './helpers'
+import { ghContextSetPRLabels, populateGitHubContext } from './helpers'
 
 // Mock the GitHub Actions core library
 const getInputMock = jest.spyOn(core, 'getInput')
 const infoMock = jest.spyOn(core, 'info')
 const warningMock = jest.spyOn(core, 'warning')
-const getOctokitMock = jest.spyOn(github, 'getOctokit')
 
 const bumpLabels = {
   patch: 'bump:patch',
@@ -101,7 +100,7 @@ describe('prBumpLabel', () => {
   })
 
   it('identifies bump:patch label', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
+    ghContextSetPRLabels('bump:patch')
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: 'patch' as ReleaseType,
@@ -110,7 +109,7 @@ describe('prBumpLabel', () => {
   })
 
   it('identifies bump:minor label', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:minor'))
+    ghContextSetPRLabels('bump:minor')
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: 'minor' as ReleaseType,
@@ -119,7 +118,7 @@ describe('prBumpLabel', () => {
   })
 
   it('identifies bump:major label', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:major'))
+    ghContextSetPRLabels('bump:major')
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: 'major' as ReleaseType,
@@ -128,7 +127,7 @@ describe('prBumpLabel', () => {
   })
 
   it('logs a message when no bump labels are present', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock())
+    ghContextSetPRLabels()
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: null,
@@ -139,9 +138,7 @@ describe('prBumpLabel', () => {
   })
 
   it('logs a warning when multiple bump labels are present', async () => {
-    getOctokitMock.mockImplementation(
-      makePROctokitMock('bump:patch', 'bump:minor')
-    )
+    ghContextSetPRLabels('bump:patch', 'bump:minor')
 
     await expect(bump_labels.prBumpLabel(bumpLabels)).resolves.toStrictEqual({
       bump: null,

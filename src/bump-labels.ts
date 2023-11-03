@@ -23,26 +23,6 @@ export function readBumpLabels(): BumpLabels {
   } as BumpLabels
 }
 
-async function getPRLabels(): Promise<string[]> {
-  if (!github.context.payload.pull_request) {
-    throw new Error(
-      `Action is running on a '${github.context.eventName}' event, only 'pull_request' events are supported`
-    )
-  }
-  const token = core.getInput('github-token')
-  const client = github.getOctokit(token)
-  const prNum = github.context.payload.pull_request.number
-  const { data: pullRequest } = await client.rest.pulls.get({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    pull_number: prNum
-  })
-  const labels = pullRequest.labels.map(({ name }) => name)
-  return new Promise(resolve => {
-    resolve(labels)
-  })
-}
-
 export function bumpFromLabel(b: BumpLabels, bump: string): ReleaseType {
   switch (bump) {
     case b.patch:
@@ -62,7 +42,14 @@ interface BumpAction {
 }
 
 export async function prBumpLabel(b: BumpLabels): Promise<BumpAction> {
-  const prLabels = await getPRLabels()
+  if (!github.context.payload.pull_request) {
+    throw new Error(
+      `Action is running on a '${github.context.eventName}' event, only 'pull_request' events are supported`
+    )
+  }
+  const prLabels = github.context.payload.pull_request.labels.map(
+    (lbl: { name: string }) => lbl.name
+  )
   const bumpLabels = prLabels.filter(
     (l: string) => l === b.patch || l === b.minor || l === b.major
   )
@@ -74,7 +61,6 @@ export async function prBumpLabel(b: BumpLabels): Promise<BumpAction> {
   }
   if (bumpLabels.length > 1) {
     core.warning(`Multiple bump labels found: ${JSON.stringify(bumpLabels)}`)
-    // TODO: PR comment
     return new Promise(resolve => {
       resolve({ bump: null, labels: bumpLabels } as BumpAction)
     })

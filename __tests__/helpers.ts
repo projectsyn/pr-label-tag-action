@@ -40,40 +40,6 @@ export function makeGitExecMock(
   }
 }
 
-export function makePROctokitMock(
-  ...bumpLabel: string[]
-): (token: string) => any {
-  const labels = [{ name: 'dependency' }]
-  if (bumpLabel !== undefined) {
-    labels.push(
-      ...bumpLabel.map((l: string) => {
-        return { name: l }
-      })
-    )
-  }
-  return (token: string): any => {
-    expect(token).toBe('mock-token')
-    return {
-      rest: {
-        pulls: {
-          get: async (req: any) => {
-            expect(req.owner).toBe('projectsyn')
-            expect(req.repo).toBe('pr-label-tag-action')
-            expect(req.pull_number).toBe(123)
-            return new Promise(resolve => {
-              resolve({
-                data: {
-                  labels
-                }
-              })
-            })
-          }
-        }
-      }
-    }
-  }
-}
-
 export function populateGitHubContext(): void {
   process.env['GITHUB_REPOSITORY'] = 'projectsyn/pr-label-tag-action'
   github.context.eventName = 'pull_request'
@@ -96,4 +62,14 @@ export function populateGitHubContext(): void {
   github.context.issue.repo = 'pr-label-tag-action'
   github.context.issue.number = 123
   github.context.sha = ''
+}
+
+export function ghContextSetPRLabels(...labels: string[]): void {
+  if (github.context.payload.pull_request) {
+    github.context.payload.pull_request.labels = labels.map(l => {
+      return { name: l }
+    })
+  } else {
+    throw Error('Failed to set PR labels, expect test to fail')
+  }
 }

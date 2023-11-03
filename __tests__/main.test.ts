@@ -15,7 +15,7 @@ import * as dispatch from '../src/dispatch'
 import * as version from '../src/version'
 import {
   makeGitExecMock,
-  makePROctokitMock,
+  ghContextSetPRLabels,
   populateGitHubContext
 } from './helpers'
 
@@ -25,7 +25,6 @@ const getInputMock = jest.spyOn(core, 'getInput')
 const getMultilineInputMock = jest.spyOn(core, 'getMultilineInput')
 const setFailedMock = jest.spyOn(core, 'setFailed')
 const execMock = jest.spyOn(exec, 'exec')
-const getOctokitMock = jest.spyOn(github, 'getOctokit')
 const createOrUpdateCommentMock = jest.spyOn(comment, 'createOrUpdateComment')
 const createAndPushTagMock = jest.spyOn(version, 'createAndPushTag')
 const triggerDispatchMock = jest.spyOn(dispatch, 'triggerDispatch')
@@ -86,10 +85,9 @@ describe('action', () => {
           return ''
       }
     })
-    // Mock github.getOctokit to return fake api responses for fetching PR
-    // labels
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
+    // create GitHub action context
     populateGitHubContext()
+    ghContextSetPRLabels('bump:patch')
   })
 
   it('creates or updates comment on labeled PR', async () => {
@@ -111,9 +109,7 @@ describe('action', () => {
   })
 
   it('creates or updates comment on PR with multiple bump labels', async () => {
-    getOctokitMock.mockImplementation(
-      makePROctokitMock('bump:patch', 'bump:minor')
-    )
+    ghContextSetPRLabels('bump:patch', 'bump:minor')
 
     await main.run()
     expect(runMock).toHaveReturned()
@@ -133,7 +129,6 @@ describe('action', () => {
   })
 
   it('creates or updates comment on closed unmerged PR', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
     if (github.context.payload.pull_request) {
@@ -158,7 +153,6 @@ describe('action', () => {
   })
 
   it('creates or updates comment on merged PR', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
     if (github.context.payload.pull_request) {
@@ -218,7 +212,6 @@ describe('action', () => {
   })
 
   it('lists triggered workflows in comment', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     github.context.payload.action = 'closed'
     expect(github.context.payload.pull_request).toBeDefined()
     if (github.context.payload.pull_request) {
@@ -252,7 +245,6 @@ describe('action', () => {
   })
 
   it('lists workflows to trigger in comment', async () => {
-    getOctokitMock.mockImplementation(makePROctokitMock('bump:patch'))
     getMultilineInputMock.mockImplementation((name: string): string[] => {
       switch (name) {
         case 'trigger':
