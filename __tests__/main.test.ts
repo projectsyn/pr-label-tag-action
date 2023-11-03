@@ -11,6 +11,7 @@ import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import * as main from '../src/main'
 import * as comment from '../src/comment'
+import * as dispatch from '../src/dispatch'
 import * as version from '../src/version'
 import {
   makeGitExecMock,
@@ -27,7 +28,7 @@ const execMock = jest.spyOn(exec, 'exec')
 const getOctokitMock = jest.spyOn(github, 'getOctokit')
 const createOrUpdateCommentMock = jest.spyOn(comment, 'createOrUpdateComment')
 const createAndPushTagMock = jest.spyOn(version, 'createAndPushTag')
-const triggerDispatchMock = jest.spyOn(version, 'triggerDispatch')
+const triggerDispatchMock = jest.spyOn(dispatch, 'triggerDispatch')
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')

@@ -1,12 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { readBumpLabels, prBumpLabel } from './bump-labels'
-import {
-  bumpVersion,
-  latestTag,
-  createAndPushTag,
-  triggerDispatch
-} from './version'
+import { triggerDispatch } from './dispatch'
+import { bumpVersion, latestTag, createAndPushTag } from './version'
 import { createOrUpdateComment } from './comment'
 
 function formatCode(text: string): string {

@@ -34536,6 +34536,77 @@ exports.createOrUpdateComment = createOrUpdateComment;
 
 /***/ }),
 
+/***/ 1940:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.triggerDispatch = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+async function triggerDispatch(tag) {
+    const token = core.getInput('github-token');
+    const client = github.getOctokit(token);
+    const names = core.getMultilineInput('trigger');
+    const { data: workflows } = await client.rest.actions.listRepoWorkflows({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo
+    });
+    for (const name of names) {
+        core.debug(`Triggering workflow ${name}`);
+        const wfs = workflows.workflows.filter(wf => wf.name === name);
+        if (wfs.length > 1) {
+            core.debug(`Multiple workflows with name ${name}, triggering all of them`);
+        }
+        if (wfs.length === 0) {
+            core.warning(`No workflow with name ${name} found, skipping`);
+        }
+        for (const wf of wfs) {
+            core.info(`Triggering workflow ${name} (${wf.id}). ` +
+                "If the workflow doesn't run, please make sure that it's configured with the `workflow_dispatch` event");
+            // only returns 204 according to the docs -- we'd have to query the
+            // actual target workflow to check if a run has been triggered.
+            await client.rest.actions.createWorkflowDispatch({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                workflow_id: wf.id,
+                ref: `refs/tags/${tag}`
+            });
+        }
+    }
+    return new Promise(resolve => {
+        resolve();
+    });
+}
+exports.triggerDispatch = triggerDispatch;
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -34569,6 +34640,7 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const bump_labels_1 = __nccwpck_require__(2605);
+const dispatch_1 = __nccwpck_require__(1940);
 const version_1 = __nccwpck_require__(1946);
 const comment_1 = __nccwpck_require__(7810);
 function formatCode(text) {
@@ -34628,7 +34700,7 @@ async function run() {
             await (0, version_1.createAndPushTag)(nextVer);
             // trigger follow-up actions, follow-up actions are given in input
             // `trigger`
-            await (0, version_1.triggerDispatch)(nextVer);
+            await (0, dispatch_1.triggerDispatch)(nextVer);
             // update comment
             await (0, comment_1.createOrUpdateComment)(`${formatComment(comments.releasedComment, nextVer, repoURL)}\n\n` +
                 `${triggers.length > 0 ? `Triggering workflows ${triggers}\n\n` : ''}` +
@@ -34686,10 +34758,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.triggerDispatch = exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
+exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
-const github = __importStar(__nccwpck_require__(5438));
 const semver_1 = __nccwpck_require__(1383);
 async function execCaptured(command, args) {
     let stdout = '';
@@ -34743,41 +34814,6 @@ async function createAndPushTag(tag) {
     });
 }
 exports.createAndPushTag = createAndPushTag;
-async function triggerDispatch(tag) {
-    const token = core.getInput('github-token');
-    const client = github.getOctokit(token);
-    const names = core.getMultilineInput('trigger');
-    const { data: workflows } = await client.rest.actions.listRepoWorkflows({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo
-    });
-    for (const name of names) {
-        core.debug(`Triggering workflow ${name}`);
-        const wfs = workflows.workflows.filter(wf => wf.name === name);
-        if (wfs.length > 1) {
-            core.debug(`Multiple workflows with name ${name}, triggering all of them`);
-        }
-        if (wfs.length === 0) {
-            core.warning(`No workflow with name ${name} found, skipping`);
-        }
-        for (const wf of wfs) {
-            core.info(`Triggering workflow ${name} (${wf.id}). ` +
-                "If the workflow doesn't run, please make sure that it's configured with the `workflow_dispatch` event");
-            // only returns 204 according to the docs -- we'd have to query the
-            // actual target workflow to check if a run has been triggered.
-            await client.rest.actions.createWorkflowDispatch({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                workflow_id: wf.id,
-                ref: `refs/tags/${tag}`
-            });
-        }
-    }
-    return new Promise(resolve => {
-        resolve();
-    });
-}
-exports.triggerDispatch = triggerDispatch;
 
 
 /***/ }),
