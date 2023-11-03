@@ -22,4 +22,6 @@ jobs:
         id: test-action
         uses: ./
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Configure the action so it can release itself
+          trigger: |
+            Release
