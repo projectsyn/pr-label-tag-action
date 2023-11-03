@@ -80,5 +80,5 @@ tags, and tags created by this action.
 
 For inputs `release-comment`, `released-comment` and `unmerged-comment` the action supports the following placeholders:
 
-* `<next-version>` is replaced with the computed new version
-* `<release-url>` is replaced with the URL to the new tag
+- `<next-version>` is replaced with the computed new version
+- `<release-url>` is replaced with the URL to the new tag

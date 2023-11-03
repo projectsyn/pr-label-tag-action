@@ -2,6 +2,13 @@
 MD004:
   style: dash
 
+# Line length is pointless since we have a table in the README
+MD013:
+  line_length: 200
+
 # Ordered list item prefix
 MD029:
   style: one
+
+# allow bare urls
+MD034: false
