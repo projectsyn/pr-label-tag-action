@@ -33246,7 +33246,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createOrUpdateComment = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-async function createOrUpdateComment(body) {
+async function createOrUpdateComment(body, updateOnly) {
     if (!github.context.payload.pull_request) {
         throw new Error(`Action is running on a '${github.context.eventName}' event, only 'pull_request' events are supported`);
     }
@@ -33275,7 +33275,7 @@ async function createOrUpdateComment(body) {
             body
         });
     }
-    else {
+    else if (!updateOnly) {
         // new comment
         client.rest.issues.createComment({
             owner: github.context.repo.owner,
@@ -33283,6 +33283,9 @@ async function createOrUpdateComment(body) {
             issue_number: prNum,
             body
         });
+    }
+    else {
+        core.debug('No comment exists, and updateOnly=true, do nothing');
     }
 }
 exports.createOrUpdateComment = createOrUpdateComment;
@@ -33434,6 +33437,10 @@ async function run() {
                 const labels = bumpAction.labels.map(formatCode).join(', ');
                 await (0, comment_1.createOrUpdateComment)(`Found ${bumpAction.labels.length} bump labels (${labels}), ` +
                     'please make sure you only add one bump label.\n\n🛠️ _Auto tagging disabled_');
+            }
+            else if (bumpAction.labels.length === 0) {
+                // update comment if it exists
+                await (0, comment_1.createOrUpdateComment)('No bump labels present\n\n🛠️ _Auto tagging disabled_', true);
             }
             return;
         }

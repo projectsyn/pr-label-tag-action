@@ -177,4 +177,14 @@ describe('createOrUpdateComment', () => {
       'Multiple potential comments owned by this action found, editing oldest'
     )
   })
+
+  it('does nothing when updateOnly=true and no comment found', async () => {
+    const clientMock = makeCommentOctokitMock()
+    getOctokitMock.mockImplementation(clientMock.mockFn)
+
+    await comment.createOrUpdateComment(commentText, true)
+
+    expect(clientMock.createFn).toHaveBeenCalledTimes(0)
+    expect(clientMock.updateFn).toHaveBeenCalledTimes(0)
+  })
 })

@@ -177,6 +177,27 @@ describe('action', () => {
     expect(triggerDispatchMock).toHaveBeenNthCalledWith(1, 'v1.2.4')
   })
 
+  it('updates comment on PR which no longer has bump labels', async () => {
+    github.context.payload.action = 'unlabeled'
+    ghContextSetPRLabels('enhancement')
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    // Verify that all of the core library functions were called correctly
+    expect(debugMock).toHaveBeenNthCalledWith(
+      1,
+      'Using bump:patch, bump:minor, bump:major to determine SemVer bump ...'
+    )
+    expect(createOrUpdateCommentMock).toHaveBeenNthCalledWith(
+      1,
+      'No bump labels present\n\n🛠️ _Auto tagging disabled_',
+      true
+    )
+    expect(createAndPushTagMock).not.toHaveBeenCalled()
+    expect(triggerDispatchMock).not.toHaveBeenCalled()
+  })
+
   it('raises an error on an empty input', async () => {
     // Set the action's inputs as return values from core.getInput()
     getInputMock.mockImplementation((name: string): string => {

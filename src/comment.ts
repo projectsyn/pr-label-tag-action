@@ -10,7 +10,10 @@ export interface GHComment {
   created_at: string
 }
 
-export async function createOrUpdateComment(body: string): Promise<void> {
+export async function createOrUpdateComment(
+  body: string,
+  updateOnly?: boolean
+): Promise<void> {
   if (!github.context.payload.pull_request) {
     throw new Error(
       `Action is running on a '${github.context.eventName}' event, only 'pull_request' events are supported`
@@ -47,7 +50,7 @@ export async function createOrUpdateComment(body: string): Promise<void> {
       comment_id: comments[0].id,
       body
     })
-  } else {
+  } else if (!updateOnly) {
     // new comment
     client.rest.issues.createComment({
       owner: github.context.repo.owner,
@@ -55,5 +58,7 @@ export async function createOrUpdateComment(body: string): Promise<void> {
       issue_number: prNum,
       body
     })
+  } else {
+    core.debug('No comment exists, and updateOnly=true, do nothing')
   }
 }

@@ -65,6 +65,12 @@ export async function run(): Promise<void> {
           `Found ${bumpAction.labels.length} bump labels (${labels}), ` +
             'please make sure you only add one bump label.\n\n🛠️ _Auto tagging disabled_'
         )
+      } else if (bumpAction.labels.length === 0) {
+        // update comment if it exists
+        await createOrUpdateComment(
+          'No bump labels present\n\n🛠️ _Auto tagging disabled_',
+          true
+        )
       }
       return
     }
