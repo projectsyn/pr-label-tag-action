@@ -33440,7 +33440,7 @@ async function run() {
         const label = bumpAction.labels[0];
         const currVer = await (0, version_1.latestTag)();
         const nextVer = (0, version_1.bumpVersion)(currVer, bumpAction.bump);
-        core.debug(`Bumping ${currVer} to ${nextVer}`);
+        core.info(`Found ${label}: bumping ${currVer} to ${nextVer}`);
         const releaseURL = `${github.context.serverUrl}/${github.context.repo.owner}` +
             `/${github.context.repo.repo}/releases/tag/${nextVer}`;
         const triggers = core

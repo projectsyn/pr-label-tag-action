@@ -72,7 +72,7 @@ export async function run(): Promise<void> {
     const label = bumpAction.labels[0]
     const currVer = await latestTag()
     const nextVer = bumpVersion(currVer, bumpAction.bump)
-    core.debug(`Bumping ${currVer} to ${nextVer}`)
+    core.info(`Found ${label}: bumping ${currVer} to ${nextVer}`)
 
     const releaseURL =
       `${github.context.serverUrl}/${github.context.repo.owner}` +
