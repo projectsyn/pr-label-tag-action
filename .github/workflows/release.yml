@@ -34,6 +34,4 @@ jobs:
       # Create a bare v<major> tag, so that users can use our action with
       # @v<major>
       - name: Update SemVer tag
-        uses: rickstaa/action-update-semver@v1
-        with:
-          major_version_tag_only: true
+        uses: zyactions/update-semver@v1
