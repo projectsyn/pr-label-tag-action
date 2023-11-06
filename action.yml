@@ -1,18 +1,39 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'SemVer tags from PR labels'
+description: 'This action creates SemVer tags from PR labels'
+author: 'VSHN AG'
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  patch-label:
+    description: 'Label which indicates a patch-level SemVer bump'
+    required: false
+    default: 'bump:patch'
+  minor-label:
+    description: 'Label which indicates a minor-level SemVer bump'
+    required: false
+    default: 'bump:minor'
+  major-label:
+    description: 'Label which indicates a major-level SemVer bump'
+    required: false
+    default: 'bump:major'
+  github-token:
+    description: 'Token to access GitHub (e.g. `$secrets.GITHUB_TOKEN`)'
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+    default: ${{ github.token }}
+  trigger:
+    description: 'Workflow names of workflows that should be triggered when a new tag is created. Multiple workflows can be specified on separate lines.'
+    required: false
+  release-comment:
+    description: 'Comment that gets posted when a tag will be pushed on merge'
+    required: false
+    default: '🚀 Merging this PR will release `<next-version>`'
+  released-comment:
+    description: 'Comment that gets posted when a tag has been pushed'
+    required: false
+    default: '🚀 This PR has been released as [`<next-version>`](<release-url>)'
+  unmerged-comment:
+    description: 'Comment that gets posted when a labeled PR gets closed unmerged'
+    required: false
+    default: 'This PR has been closed unmerged. No new release will be created for these changes'
 
 runs:
   using: node20
