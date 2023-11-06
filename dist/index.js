@@ -33530,7 +33530,7 @@ async function latestTag() {
     const tags = tagsResp
         .map(({ name }) => name)
         .filter(tag => {
-        return tag.startsWith('v');
+        return /^v\d+\.\d+\.\d+$/.test(tag);
     })
         .sort(semver_1.rcompare);
     const latest = tags.length === 0 ? 'v0.0.0' : tags[0];
