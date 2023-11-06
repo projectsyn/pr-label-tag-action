@@ -56,7 +56,8 @@ describe('latestTag', () => {
       'v1.0.0',
       'v1.2.2',
       'foo-v1.0.0',
-      'bar'
+      'bar',
+      'v1'
     )
     getOctokitMock.mockImplementation(clientMock.mockFn)
 

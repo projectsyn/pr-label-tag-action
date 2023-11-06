@@ -13,7 +13,7 @@ export async function latestTag(): Promise<string> {
   const tags = tagsResp
     .map(({ name }) => name)
     .filter(tag => {
-      return tag.startsWith('v')
+      return /^v\d+\.\d+\.\d+$/.test(tag)
     })
     .sort(rcompare)
 
