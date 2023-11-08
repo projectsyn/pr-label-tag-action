@@ -2,5 +2,35 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "prHourlyLimit": 5,
+  "labels": ["dependency"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "labels": ["dependency", "bump:major"]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "labels": ["dependency", "bump:minor"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "labels": ["dependency", "bump:patch"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "devDependencies (non-major)",
+      "groupSlug": "dev-dependencies",
+      "labels": ["dependency"],
+      "automerge": true,
+      "platformAutomerge": true,
+      "extends": [ "schedule:weekly" ]
+    }
   ]
 }
