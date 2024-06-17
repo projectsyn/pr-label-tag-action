@@ -12,13 +12,13 @@
     },
     {
       "matchUpdateTypes": ["minor"],
-      "labels": ["dependency", "bump:minor"],
+      "labels": ["dependency", "bump:minor", "automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "matchUpdateTypes": ["patch"],
-      "labels": ["dependency", "bump:patch"],
+      "labels": ["dependency", "bump:patch", "automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
@@ -27,7 +27,7 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupName": "devDependencies (non-major)",
       "groupSlug": "dev-dependencies",
-      "labels": ["dependency"],
+      "labels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true,
       "extends": [ "schedule:weekly" ]
