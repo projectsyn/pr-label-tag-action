@@ -27,7 +27,7 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupName": "devDependencies (non-major)",
       "groupSlug": "dev-dependencies",
-      "labels": ["dependency"],
+      "labels": [],
       "automerge": true,
       "platformAutomerge": true,
       "extends": [ "schedule:weekly" ]
