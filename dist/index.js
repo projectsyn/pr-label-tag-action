@@ -32422,7 +32422,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.prBumpLabel = exports.bumpFromLabel = exports.readBumpLabels = void 0;
+exports.readBumpLabels = readBumpLabels;
+exports.bumpFromLabel = bumpFromLabel;
+exports.prBumpLabel = prBumpLabel;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function readBumpLabels() {
@@ -32438,7 +32440,6 @@ function readBumpLabels() {
         major: majorLabel
     };
 }
-exports.readBumpLabels = readBumpLabels;
 function bumpFromLabel(b, bump) {
     switch (bump) {
         case b.patch:
@@ -32451,7 +32452,6 @@ function bumpFromLabel(b, bump) {
             throw new Error(`Unknown version bump ${bump}. This shouldn't happen`);
     }
 }
-exports.bumpFromLabel = bumpFromLabel;
 async function prBumpLabel(b) {
     if (!github.context.payload.pull_request) {
         throw new Error(`Action is running on a '${github.context.eventName}' event, only 'pull_request' events are supported`);
@@ -32478,7 +32478,6 @@ async function prBumpLabel(b) {
         });
     });
 }
-exports.prBumpLabel = prBumpLabel;
 
 
 /***/ }),
@@ -32512,7 +32511,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createOrUpdateComment = void 0;
+exports.createOrUpdateComment = createOrUpdateComment;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 async function createOrUpdateComment(body, updateOnly) {
@@ -32557,7 +32556,6 @@ async function createOrUpdateComment(body, updateOnly) {
         core.debug('No comment exists, and updateOnly=true, do nothing');
     }
 }
-exports.createOrUpdateComment = createOrUpdateComment;
 
 
 /***/ }),
@@ -32591,7 +32589,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.triggerDispatch = void 0;
+exports.triggerDispatch = triggerDispatch;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 async function triggerDispatch(tag) {
@@ -32628,7 +32626,6 @@ async function triggerDispatch(tag) {
         resolve();
     });
 }
-exports.triggerDispatch = triggerDispatch;
 
 
 /***/ }),
@@ -32662,7 +32659,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const bump_labels_1 = __nccwpck_require__(2605);
@@ -32754,7 +32751,6 @@ async function run() {
             core.setFailed(error.message);
     }
 }
-exports.run = run;
 
 
 /***/ }),
@@ -32788,7 +32784,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createAndPushTag = exports.bumpVersion = exports.latestTag = void 0;
+exports.latestTag = latestTag;
+exports.bumpVersion = bumpVersion;
+exports.createAndPushTag = createAndPushTag;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const semver_1 = __nccwpck_require__(1383);
@@ -32807,7 +32805,6 @@ async function latestTag() {
         resolve(latest);
     });
 }
-exports.latestTag = latestTag;
 function bumpVersion(currVer, bump) {
     core.debug(`Current version: ${currVer}`);
     const newVer = (0, semver_1.inc)(currVer, bump);
@@ -32817,7 +32814,6 @@ function bumpVersion(currVer, bump) {
     // we know newVer is a string here
     return `v${newVer}`;
 }
-exports.bumpVersion = bumpVersion;
 async function createAndPushTag(tag) {
     if (!github.context.payload.pull_request) {
         throw Error(`Action is running for a '${github.context.eventName}' event. ` +
@@ -32837,7 +32833,6 @@ async function createAndPushTag(tag) {
         sha: github.context.payload.pull_request.merge_commit_sha
     });
 }
-exports.createAndPushTag = createAndPushTag;
 
 
 /***/ }),
