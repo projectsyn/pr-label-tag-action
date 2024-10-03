@@ -1,4 +1,4 @@
-# GitHub action to create new SemVer tags based on PR labels
+# GitHub Action to create new SemVer tags based on PR labels
 
 [![GitHub Super-Linter](https://github.com/projectsyn/pr-label-tag-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/projectsyn/pr-label-tag-action/actions/workflows/ci.yml/badge.svg)
