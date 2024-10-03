@@ -43,4 +43,7 @@ jobs:
           VALIDATE_TYPESCRIPT_STANDARD: false
           VALIDATE_CHECKOV: false
           VALIDATE_JSCPD: false
+          VALIDATE_JSON_PRETTIER: false
+          VALIDATE_MARKDOWN_PRETTIER: false
+          VALIDATE_YAML_PRETTIER: false
           FILTER_REGEX_EXCLUDE: '(dist/licenses\.txt|PULL_REQUEST_TEMPLATE.md)'
