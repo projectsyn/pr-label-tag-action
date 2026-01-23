@@ -71,7 +71,7 @@
     "semver": "^7.5.4"
   },
   "devDependencies": {
-    "@eslint/compat": "^1.4.0",
+    "@eslint/compat": "^2.0.0",
     "@types/jest": "^29.5.6",
     "@types/node": "^20.8.9",
     "@types/semver": "^7.5.8",
