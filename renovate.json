@@ -1,8 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "prHourlyLimit": 5,
   "labels": ["dependency"],
   "packageRules": [
@@ -30,7 +28,7 @@
       "labels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true,
-      "extends": [ "schedule:weekly" ]
+      "extends": ["schedule:weekly"]
     }
   ]
 }
