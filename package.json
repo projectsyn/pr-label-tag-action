@@ -71,6 +71,7 @@
     "semver": "^7.5.4"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.4.0",
     "@types/jest": "^29.5.6",
     "@types/node": "^20.8.9",
     "@types/semver": "^7.5.8",
@@ -78,7 +79,8 @@
     "@typescript-eslint/parser": "^8.0.0",
     "@vercel/ncc": "^0.38.1",
     "eslint": "^9.0.0",
-    "eslint-plugin-github": "^6.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jest": "^29.0.0",
     "eslint-plugin-jsonc": "^2.10.0",
     "eslint-plugin-prettier": "^5.0.1",
